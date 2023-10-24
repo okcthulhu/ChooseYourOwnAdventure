@@ -1,0 +1,97 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Choose Your Own Adventure with DBT"
+  description: "An API for a Choose Your Own Adventure game focused on teaching DBT skills."
+
+servers:
+  - url: "https://api.yourwebsite.com"
+
+paths:
+  /player/{playerId}:
+    get:
+      summary: "Retrieve a player's state."
+      parameters:
+        - name: "playerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Player state retrieved."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerState"
+                
+  /storyElements/{nodeId}:
+    get:
+      summary: "Retrieve a story node by its ID."
+      parameters:
+        - name: "nodeId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "Story node retrieved."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoryElement"
+
+components:
+  schemas:
+    PlayerState:
+      type: "object"
+      properties:
+        playerId:
+          type: "string"
+        currentChapter:
+          type: "string"
+        currentPart:
+          type: "string"
+        wisdoms:
+          type: "array"
+          items:
+            type: "string"
+        artifacts:
+          type: "array"
+          items:
+            type: "string"
+
+    StoryElement:
+      type: "object"
+      properties:
+        nodeId:
+          type: "string"
+        chapter:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            artURL:
+              type: "string"
+            videoURL:
+              type: "string"
+        part:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+            artURL:
+              type: "string"
+            videoURL:
+              type: "string"
+        content:
+          type: "string"
+        options:
+          type: "array"
+          items:
+            type: "object"
+        wisdoms:
+          type: "array"
+          items:
+            type: "object"
