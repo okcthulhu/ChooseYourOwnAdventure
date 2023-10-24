@@ -16,7 +16,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
-	. "github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 )
 
 // ServerInterface represents all server handlers.
