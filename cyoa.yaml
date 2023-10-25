@@ -1,36 +1,93 @@
 openapi: "3.0.0"
 info:
   version: "1.0.0"
-  title: "Choose Your Own Adventure with DBT"
-  description: "An API for a Choose Your Own Adventure game focused on teaching DBT skills."
+  title: "Choose Your Own Adventure API"
+  description: "An API for a Choose Your Own Adventure game."
 
 servers:
   - url: "https://api.yourwebsite.com"
 
 paths:
-  /player/{playerId}:
+  /player:
+    post:
+      summary: "Create a new player state."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Player'
+      responses:
+        "201":
+          description: "Player state created successfully."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
     get:
       summary: "Retrieve a player's state."
       parameters:
-        - name: "playerId"
-          in: "path"
-          required: true
+        - name: "id"
+          in: "query"
           schema:
             type: "string"
+        - name: "wixid"
+          in: "query"
+          schema:
+            type: "string"
+            format: "uuid"
       responses:
         "200":
           description: "Player state retrieved."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PlayerState"
-                
-  /storyElements/{nodeId}:
+                $ref: '#/components/schemas/Player'
+
+  /player/{playerId}:
+    patch:
+      summary: "Update a player's state by ID."
+      parameters:
+        - name: "playerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Player'
+      responses:
+        "200":
+          description: "Player state updated."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+
+  /storyElements:
+    post:
+      summary: "Create a new story element."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryElement'
+      responses:
+        "201":
+          description: "Story element created successfully."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryElement'
     get:
-      summary: "Retrieve a story node by its ID."
+      summary: "Retrieve a story node."
       parameters:
         - name: "nodeId"
-          in: "path"
+          in: "query"
           required: true
           schema:
             type: "string"
@@ -40,32 +97,70 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StoryElement"
+                $ref: '#/components/schemas/StoryElement'
+
+  /storyElements/{nodeId}:
+    put:
+      summary: "Update a story node by its ID."
+      parameters:
+        - name: "nodeId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryElement'
+      responses:
+        "200":
+          description: "Story element updated."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryElement'
 
 components:
   schemas:
-    PlayerState:
+    Player:
       type: "object"
       properties:
-        playerId:
+        _id:
+          type: "string"  # Updated from object, assuming you'll be interacting with it as a hex string
+        wixID:
           type: "string"
-        currentChapter:
+          format: "uuid"
+        username:
           type: "string"
-        currentPart:
+        email:
           type: "string"
-        wisdoms:
-          type: "array"
-          items:
-            type: "string"
-        artifacts:
-          type: "array"
-          items:
-            type: "string"
+        storyState:
+          type: "object"
+          properties:
+            currentChapter:
+              type: "string"
+            currentPart:
+              type: "string"
+            wisdoms:
+              type: "array"
+              items:
+                type: "string"
+            artifacts:
+              type: "array"
+              items:
+                type: "string"
 
     StoryElement:
       type: "object"
       properties:
-        nodeId:
+        _id:
+          type: "object"
+          properties:
+            $oid:
+              type: "string"
+        nodeID:
           type: "string"
         chapter:
           type: "object"
@@ -92,6 +187,10 @@ components:
           items:
             type: "object"
         wisdoms:
+          type: "array"
+          items:
+            type: "object"
+        artifacts:
           type: "array"
           items:
             type: "object"

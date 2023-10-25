@@ -1,76 +1,60 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api"
+	"github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 )
 
 func main() {
-	port := flag.String("port", "1323", "Port to run the server on")
+	// Handle port flag
+	var port string
+	flag.StringVar(&port, "port", "8080", "Port to run the application on")
 	flag.Parse()
 
+	// Initialize Echo
 	e := echo.New()
 
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
+	// Initialize handler with DB connection
 	handler := api.NewHandler()
 
-	e.GET("/adventure", handler.GetAdventure)
-	e.PUT("/adventure", handler.UpdateAdventure)
+	// Define the routes
 
-	// Start server
-	go func() {
-		if err := e.Start(fmt.Sprintf(":%s", *port)); err != nil {
-			e.Logger.Info("Shutting down the server")
+	// General route comes first
+
+	//Player routes
+	e.POST("/player", handler.CreatePlayerState)
+	e.GET("/player", handler.GetPlayerStateByUsername)
+	e.GET("/player/:playerId", func(c echo.Context) error {
+		return handler.GetPlayerState(c, c.Param("playerId"))
+	})
+	e.GET("/player/{wixID}", func(c echo.Context) error {
+		return handler.GetPlayerStateByWixID(c, c.Param("wixID"))
+	})
+	e.PATCH("/player/:playerId", func(c echo.Context) error {
+		playerState := new(models.Player)
+		if err := c.Bind(playerState); err != nil {
+			return err
 		}
-	}()
+		return handler.UpdatePlayerState(c, c.Param("playerId"), *playerState)
+	})
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 10 seconds.
-	// ...
+	// StoryElement routes
+	e.POST("/storyElements", handler.CreateStoryElement)
+	e.GET("/story/:nodeId", func(c echo.Context) error {
+		return handler.GetStoryElement(c, c.Param("nodeId"))
+	})
+	e.PUT("/storyElements/:nodeId", func(c echo.Context) error {
+		storyElement := new(models.StoryElement)
+		if err := c.Bind(storyElement); err != nil {
+			return err
+		}
+		return handler.UpdateStoryElement(c, c.Param("nodeId"), *storyElement)
+	})
 
-	// Disconnect MongoDB client
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := handler.DB.Disconnect(ctx); err != nil {
-		log.Fatalf("Failed to close MongoDB client: %v", err)
-	}
+	// Start the Echo web server
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", port)))
 }
-
-// func ham() {
-// 	// Set MongoDB client options
-// 	clientOptions := options.Client().ApplyURI("mongodb+srv://n8gallenson:Lg2ke370DwkQe7QO@cyoa01.m1d2ueq.mongodb.net/?retryWrites=true&w=majority")
-
-// 	// Connect to MongoDB
-// 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-// 	defer cancel()
-
-// 	client, err := mongo.Connect(ctx, clientOptions)
-// 	if err != nil {
-// 		log.Fatalf("Failed to connect to MongoDB: %v", err)
-// 	}
-
-// 	// Check the connection
-// 	err = client.Ping(ctx, nil)
-// 	if err != nil {
-// 		log.Fatalf("Failed to ping MongoDB: %v", err)
-// 	} else {
-// 		fmt.Println("Successfully connected to Atlas")
-// 	}
-
-// 	// Disconnect from MongoDB
-// 	defer func() {
-// 		if err := client.Disconnect(ctx); err != nil {
-// 			log.Fatalf("Failed to close MongoDB client: %v", err)
-// 		}
-// 	}()
-// }
