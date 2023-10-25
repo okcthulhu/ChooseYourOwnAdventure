@@ -23,9 +23,7 @@ type Player struct {
 
 // StoryElement defines model for StoryElement.
 type StoryElement struct {
-	Id *struct {
-		Oid *string `json:"$oid,omitempty"`
-	} `json:"_id,omitempty"`
+	Id        *string                   `json:"_id,omitempty"`
 	Artifacts *[]map[string]interface{} `json:"artifacts,omitempty"`
 	Chapter   *struct {
 		ArtURL   *string `json:"artURL,omitempty"`
@@ -41,17 +39,6 @@ type StoryElement struct {
 		VideoURL *string `json:"videoURL,omitempty"`
 	} `json:"part,omitempty"`
 	Wisdoms *[]map[string]interface{} `json:"wisdoms,omitempty"`
-}
-
-// GetPlayerParams defines parameters for GetPlayer.
-type GetPlayerParams struct {
-	Id    *string             `form:"id,omitempty" json:"id,omitempty"`
-	Wixid *openapi_types.UUID `form:"wixid,omitempty" json:"wixid,omitempty"`
-}
-
-// GetStoryElementsParams defines parameters for GetStoryElements.
-type GetStoryElementsParams struct {
-	NodeId string `form:"nodeId" json:"nodeId"`
 }
 
 // PostPlayerJSONRequestBody defines body for PostPlayer for application/json ContentType.

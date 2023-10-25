@@ -16,6 +16,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerInterface represents all server handlers.
@@ -23,15 +24,21 @@ type ServerInterface interface {
 	// Create a new player state.
 	// (POST /player)
 	PostPlayer(ctx echo.Context) error
-	// Retrieve a player's state by ID.
+	// Retrieve a player's state.
 	// (GET /player/{playerId})
-	GetPlayerPlayerId(ctx echo.Context, playerId string) error
+	GetPlayerPlayerId(ctx echo.Context, playerId openapi_types.UUID) error
 	// Update a player's state by ID.
 	// (PATCH /player/{playerId})
-	PatchPlayerPlayerId(ctx echo.Context, playerId string) error
-	// Retrieve a story node by its ID.
+	PatchPlayerPlayerId(ctx echo.Context, playerId openapi_types.UUID) error
+	// Create a new story element.
+	// (POST /storyElements)
+	PostStoryElements(ctx echo.Context) error
+	// Retrieve a story node.
 	// (GET /storyElements/{nodeId})
 	GetStoryElementsNodeId(ctx echo.Context, nodeId string) error
+	// Update a story node by its ID.
+	// (PUT /storyElements/{nodeId})
+	PutStoryElementsNodeId(ctx echo.Context, nodeId string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -52,7 +59,7 @@ func (w *ServerInterfaceWrapper) PostPlayer(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetPlayerPlayerId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "playerId" -------------
-	var playerId string
+	var playerId openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithLocation("simple", false, "playerId", runtime.ParamLocationPath, ctx.Param("playerId"), &playerId)
 	if err != nil {
@@ -68,7 +75,7 @@ func (w *ServerInterfaceWrapper) GetPlayerPlayerId(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PatchPlayerPlayerId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "playerId" -------------
-	var playerId string
+	var playerId openapi_types.UUID
 
 	err = runtime.BindStyledParameterWithLocation("simple", false, "playerId", runtime.ParamLocationPath, ctx.Param("playerId"), &playerId)
 	if err != nil {
@@ -77,6 +84,15 @@ func (w *ServerInterfaceWrapper) PatchPlayerPlayerId(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PatchPlayerPlayerId(ctx, playerId)
+	return err
+}
+
+// PostStoryElements converts echo context to params.
+func (w *ServerInterfaceWrapper) PostStoryElements(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostStoryElements(ctx)
 	return err
 }
 
@@ -93,6 +109,22 @@ func (w *ServerInterfaceWrapper) GetStoryElementsNodeId(ctx echo.Context) error 
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.GetStoryElementsNodeId(ctx, nodeId)
+	return err
+}
+
+// PutStoryElementsNodeId converts echo context to params.
+func (w *ServerInterfaceWrapper) PutStoryElementsNodeId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "nodeId" -------------
+	var nodeId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "nodeId", runtime.ParamLocationPath, ctx.Param("nodeId"), &nodeId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nodeId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PutStoryElementsNodeId(ctx, nodeId)
 	return err
 }
 
@@ -127,24 +159,27 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.POST(baseURL+"/player", wrapper.PostPlayer)
 	router.GET(baseURL+"/player/:playerId", wrapper.GetPlayerPlayerId)
 	router.PATCH(baseURL+"/player/:playerId", wrapper.PatchPlayerPlayerId)
+	router.POST(baseURL+"/storyElements", wrapper.PostStoryElements)
 	router.GET(baseURL+"/storyElements/:nodeId", wrapper.GetStoryElementsNodeId)
+	router.PUT(baseURL+"/storyElements/:nodeId", wrapper.PutStoryElementsNodeId)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8yWUWvbMBDHv4q4DfZi7HR781vWjhEYW2jpwxhlKPalUbEl7e6cYEK++5DskLR2Sgtb",
-	"tqe6p7+k0++vO2ULhau9s2iFId8CFyusdfycV7pFCl+enEcSgzH+05TD4FvXRaX1CDmwkLH3sNsl+4hb",
-	"PGAhsEsAa22qEW0CLI7aG9GCww00iVnqosvSCNY8ukQf0ES6Df8XDRFauVxpL91hBlN6yVyTjI5vDJeu",
-	"ftW+Y8duGMnqGl9I6Saw+FRhjVb+vAfP0jzIBjQPGAfu3F5/GSVz4swJrE2JbnzWWMqFs9KzGO7hSpxd",
-	"jQ45L8bZV57T93fh7Id85q6dyna4TAgZu3RhcolckIkMIIepVdP5TC0dKa0uV84xqu+uIfVtY9W0XKOV",
-	"hlDd6xpTSECMVGHh08rpfAYJrJG42+AinaSTDjta7Q3k8CGGAlNZxfNk/tBYHEfOgbIOOc5KyGHuWPrm",
-	"kwDhrwZZPrqyDcqjW6C9r0wRp2UPHLbft69YDIRLyOFNduhvWd/csn7xCCqsbwhLyIUajAH2znJn+fvJ",
-	"xV/Z9bEt3Yji0PlUQagFS8VNUSDzsqmqNo02c1PXmtpgSNQorSxulD+a3Ql7wtm2+zsrdyG3exxh/Rl7",
-	"1PNeGp0iXaMgMeQ/tmBCisE92N9z8AfxY37JEYun1/1uwHZybraEQgbXWD4Fet0PKN3jfMf9lEWrZldp",
-	"1xSkWI3c1hA+K8N/WxBnN63xZSiIp5bdxvBpw0Id8NEjytk2PhPPF8Pxs8tfo/5Fbtq99P+oh0e/HkYA",
-	"x3EVkn5RTfBBvmiVEe4RBz3Ses+loQpyWIl4zrNMe5O2rqENLtgIpoWrYXe3+x0AAP//G4SIXXIKAAA=",
+	"H4sIAAAAAAAC/8xVQW8aOxD+K5bfk94FseT1tjeaVBVS1aJEOVRVVDm7Q3C0a7szY+gK8d8re02A7ELI",
+	"IaQnlvHnGfv7Zj6vZGFrZw0YJpmvJBVzqFX8nFaqAQxfDq0DZA0x/lOX4YcbBzKXxKjNg1wPJNRKV70r",
+	"xBabG1YM3WwKWc9U0VbXDDX1pkgBhaia8L/wiGD4cq4ct4fsbEmQqULuXV9qKm39qrrbgL1/hIIDwhOg",
+	"UTUcqPF7chVWZhZrxTKX3utSDp4j+xLfBNY+VVCD4dNVOMrnNnmHzy2RHX1ur7/0ljp464Uuwfbv6rto",
+	"YQ2nO3Zr2BJaBjtL1rG25pX3dKkbzn7JI9126LTdNCGkzcyGzSVQgTpyIHM5NmI8nYiZRaHE5dxaAvHd",
+	"ehTflkaMywUY9gjiQdUwDO2nuQqJDyPH04kcyAUgtQUuhqPhqKUdjHJa5vJDDAVOeR7vk7mtZViKPAeW",
+	"VTjjpJS5nFriZCsDifDLA/FHWzYBudMFyrlKF3Fb9kih/MaYwte/CDOZy3+yrXNlybaylDwSFfJrhFLm",
+	"jB5igJw11Er+/+jiTaruy9KuCAreJwoExVAK8kUBRDNfVc0wyky+rhU2QZCIEUoYWAq3s7sFJoazVfs7",
+	"KdfhbA/Qw/VnSFRPEzQqhaoGBiSZ/1hJHY4Y1JObPpduC97nb7DDxUtmdtfhenRurhEYNSygfE7wdVoQ",
+	"KtH7Hz0RHFu5mPf0bQi/K5vvOypnl8+7MozKc/FuY7gjnbhvxOQqTQjtPJt03Ipu9qBvQ/PeK35mX+rW",
+	"3qc8rgtoAa+3J9rd3sd+torP93GT2hPha8SfNFtmAz08Wef0pdO4Doc+yZvoCd76ku9rYX928v6G+Ri9",
+	"03y85ElbyYIfaabkSQENuNio4bGSuZwzO8qzTDk9bKzHJdyTZhgWtpbru/WfAAAA//9iiJPflw0AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

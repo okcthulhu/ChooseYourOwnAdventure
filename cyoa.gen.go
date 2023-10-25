@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 )
 
@@ -90,43 +91,31 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetPlayer request
-	GetPlayer(ctx context.Context, params *models.GetPlayerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostPlayerWithBody request with any body
 	PostPlayerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostPlayer(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetPlayerPlayerId request
+	GetPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PatchPlayerPlayerIdWithBody request with any body
-	PatchPlayerPlayerIdWithBody(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchPlayerPlayerIdWithBody(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchPlayerPlayerId(ctx context.Context, playerId string, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetStoryElements request
-	GetStoryElements(ctx context.Context, params *models.GetStoryElementsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostStoryElementsWithBody request with any body
 	PostStoryElementsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostStoryElements(ctx context.Context, body models.PostStoryElementsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetStoryElementsNodeId request
+	GetStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PutStoryElementsNodeIdWithBody request with any body
 	PutStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PutStoryElementsNodeId(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-}
-
-func (c *Client) GetPlayer(ctx context.Context, params *models.GetPlayerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetPlayerRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
 }
 
 func (c *Client) PostPlayerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -153,7 +142,19 @@ func (c *Client) PostPlayer(ctx context.Context, body models.PostPlayerJSONReque
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchPlayerPlayerIdWithBody(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPlayerPlayerIdRequest(c.Server, playerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchPlayerPlayerIdWithBody(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPatchPlayerPlayerIdRequestWithBody(c.Server, playerId, contentType, body)
 	if err != nil {
 		return nil, err
@@ -165,20 +166,8 @@ func (c *Client) PatchPlayerPlayerIdWithBody(ctx context.Context, playerId strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchPlayerPlayerId(ctx context.Context, playerId string, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PatchPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPatchPlayerPlayerIdRequest(c.Server, playerId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetStoryElements(ctx context.Context, params *models.GetStoryElementsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetStoryElementsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +202,18 @@ func (c *Client) PostStoryElements(ctx context.Context, body models.PostStoryEle
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetStoryElementsNodeIdRequest(c.Server, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PutStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutStoryElementsNodeIdRequestWithBody(c.Server, nodeId, contentType, body)
 	if err != nil {
@@ -235,71 +236,6 @@ func (c *Client) PutStoryElementsNodeId(ctx context.Context, nodeId string, body
 		return nil, err
 	}
 	return c.Client.Do(req)
-}
-
-// NewGetPlayerRequest generates requests for GetPlayer
-func NewGetPlayerRequest(server string, params *models.GetPlayerParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/player")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Id != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "id", runtime.ParamLocationQuery, *params.Id); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.Wixid != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "wixid", runtime.ParamLocationQuery, *params.Wixid); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
 }
 
 // NewPostPlayerRequest calls the generic PostPlayer builder with application/json body
@@ -342,8 +278,42 @@ func NewPostPlayerRequestWithBody(server string, contentType string, body io.Rea
 	return req, nil
 }
 
+// NewGetPlayerPlayerIdRequest generates requests for GetPlayerPlayerId
+func NewGetPlayerPlayerIdRequest(server string, playerId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "playerId", runtime.ParamLocationPath, playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/player/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewPatchPlayerPlayerIdRequest calls the generic PatchPlayerPlayerId builder with application/json body
-func NewPatchPlayerPlayerIdRequest(server string, playerId string, body models.PatchPlayerPlayerIdJSONRequestBody) (*http.Request, error) {
+func NewPatchPlayerPlayerIdRequest(server string, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -354,7 +324,7 @@ func NewPatchPlayerPlayerIdRequest(server string, playerId string, body models.P
 }
 
 // NewPatchPlayerPlayerIdRequestWithBody generates requests for PatchPlayerPlayerId with any type of body
-func NewPatchPlayerPlayerIdRequestWithBody(server string, playerId string, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchPlayerPlayerIdRequestWithBody(server string, playerId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -385,51 +355,6 @@ func NewPatchPlayerPlayerIdRequestWithBody(server string, playerId string, conte
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetStoryElementsRequest generates requests for GetStoryElements
-func NewGetStoryElementsRequest(server string, params *models.GetStoryElementsParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/storyElements")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nodeId", runtime.ParamLocationQuery, params.NodeId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -470,6 +395,40 @@ func NewPostStoryElementsRequestWithBody(server string, contentType string, body
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetStoryElementsNodeIdRequest generates requests for GetStoryElementsNodeId
+func NewGetStoryElementsNodeIdRequest(server string, nodeId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "nodeId", runtime.ParamLocationPath, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/storyElements/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -564,53 +523,31 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetPlayerWithResponse request
-	GetPlayerWithResponse(ctx context.Context, params *models.GetPlayerParams, reqEditors ...RequestEditorFn) (*GetPlayerResponse, error)
-
 	// PostPlayerWithBodyWithResponse request with any body
 	PostPlayerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error)
 
 	PostPlayerWithResponse(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error)
 
+	// GetPlayerPlayerIdWithResponse request
+	GetPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetPlayerPlayerIdResponse, error)
+
 	// PatchPlayerPlayerIdWithBodyWithResponse request with any body
-	PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
+	PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
 
-	PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId string, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
-
-	// GetStoryElementsWithResponse request
-	GetStoryElementsWithResponse(ctx context.Context, params *models.GetStoryElementsParams, reqEditors ...RequestEditorFn) (*GetStoryElementsResponse, error)
+	PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
 
 	// PostStoryElementsWithBodyWithResponse request with any body
 	PostStoryElementsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStoryElementsResponse, error)
 
 	PostStoryElementsWithResponse(ctx context.Context, body models.PostStoryElementsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStoryElementsResponse, error)
 
+	// GetStoryElementsNodeIdWithResponse request
+	GetStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*GetStoryElementsNodeIdResponse, error)
+
 	// PutStoryElementsNodeIdWithBodyWithResponse request with any body
 	PutStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error)
 
 	PutStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error)
-}
-
-type GetPlayerResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *models.Player
-}
-
-// Status returns HTTPResponse.Status
-func (r GetPlayerResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetPlayerResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
 }
 
 type PostPlayerResponse struct {
@@ -629,6 +566,28 @@ func (r PostPlayerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostPlayerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPlayerPlayerIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *models.Player
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPlayerPlayerIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPlayerPlayerIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -657,28 +616,6 @@ func (r PatchPlayerPlayerIdResponse) StatusCode() int {
 	return 0
 }
 
-type GetStoryElementsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *models.StoryElement
-}
-
-// Status returns HTTPResponse.Status
-func (r GetStoryElementsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetStoryElementsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PostStoryElementsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -695,6 +632,28 @@ func (r PostStoryElementsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostStoryElementsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetStoryElementsNodeIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *models.StoryElement
+}
+
+// Status returns HTTPResponse.Status
+func (r GetStoryElementsNodeIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetStoryElementsNodeIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -723,15 +682,6 @@ func (r PutStoryElementsNodeIdResponse) StatusCode() int {
 	return 0
 }
 
-// GetPlayerWithResponse request returning *GetPlayerResponse
-func (c *ClientWithResponses) GetPlayerWithResponse(ctx context.Context, params *models.GetPlayerParams, reqEditors ...RequestEditorFn) (*GetPlayerResponse, error) {
-	rsp, err := c.GetPlayer(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetPlayerResponse(rsp)
-}
-
 // PostPlayerWithBodyWithResponse request with arbitrary body returning *PostPlayerResponse
 func (c *ClientWithResponses) PostPlayerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error) {
 	rsp, err := c.PostPlayerWithBody(ctx, contentType, body, reqEditors...)
@@ -749,8 +699,17 @@ func (c *ClientWithResponses) PostPlayerWithResponse(ctx context.Context, body m
 	return ParsePostPlayerResponse(rsp)
 }
 
+// GetPlayerPlayerIdWithResponse request returning *GetPlayerPlayerIdResponse
+func (c *ClientWithResponses) GetPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetPlayerPlayerIdResponse, error) {
+	rsp, err := c.GetPlayerPlayerId(ctx, playerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPlayerPlayerIdResponse(rsp)
+}
+
 // PatchPlayerPlayerIdWithBodyWithResponse request with arbitrary body returning *PatchPlayerPlayerIdResponse
-func (c *ClientWithResponses) PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
+func (c *ClientWithResponses) PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
 	rsp, err := c.PatchPlayerPlayerIdWithBody(ctx, playerId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -758,21 +717,12 @@ func (c *ClientWithResponses) PatchPlayerPlayerIdWithBodyWithResponse(ctx contex
 	return ParsePatchPlayerPlayerIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId string, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
+func (c *ClientWithResponses) PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
 	rsp, err := c.PatchPlayerPlayerId(ctx, playerId, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePatchPlayerPlayerIdResponse(rsp)
-}
-
-// GetStoryElementsWithResponse request returning *GetStoryElementsResponse
-func (c *ClientWithResponses) GetStoryElementsWithResponse(ctx context.Context, params *models.GetStoryElementsParams, reqEditors ...RequestEditorFn) (*GetStoryElementsResponse, error) {
-	rsp, err := c.GetStoryElements(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetStoryElementsResponse(rsp)
 }
 
 // PostStoryElementsWithBodyWithResponse request with arbitrary body returning *PostStoryElementsResponse
@@ -792,6 +742,15 @@ func (c *ClientWithResponses) PostStoryElementsWithResponse(ctx context.Context,
 	return ParsePostStoryElementsResponse(rsp)
 }
 
+// GetStoryElementsNodeIdWithResponse request returning *GetStoryElementsNodeIdResponse
+func (c *ClientWithResponses) GetStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*GetStoryElementsNodeIdResponse, error) {
+	rsp, err := c.GetStoryElementsNodeId(ctx, nodeId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetStoryElementsNodeIdResponse(rsp)
+}
+
 // PutStoryElementsNodeIdWithBodyWithResponse request with arbitrary body returning *PutStoryElementsNodeIdResponse
 func (c *ClientWithResponses) PutStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error) {
 	rsp, err := c.PutStoryElementsNodeIdWithBody(ctx, nodeId, contentType, body, reqEditors...)
@@ -807,32 +766,6 @@ func (c *ClientWithResponses) PutStoryElementsNodeIdWithResponse(ctx context.Con
 		return nil, err
 	}
 	return ParsePutStoryElementsNodeIdResponse(rsp)
-}
-
-// ParseGetPlayerResponse parses an HTTP response from a GetPlayerWithResponse call
-func ParseGetPlayerResponse(rsp *http.Response) (*GetPlayerResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetPlayerResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest models.Player
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
 }
 
 // ParsePostPlayerResponse parses an HTTP response from a PostPlayerWithResponse call
@@ -855,6 +788,32 @@ func ParsePostPlayerResponse(rsp *http.Response) (*PostPlayerResponse, error) {
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPlayerPlayerIdResponse parses an HTTP response from a GetPlayerPlayerIdWithResponse call
+func ParseGetPlayerPlayerIdResponse(rsp *http.Response) (*GetPlayerPlayerIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPlayerPlayerIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest models.Player
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 
@@ -887,32 +846,6 @@ func ParsePatchPlayerPlayerIdResponse(rsp *http.Response) (*PatchPlayerPlayerIdR
 	return response, nil
 }
 
-// ParseGetStoryElementsResponse parses an HTTP response from a GetStoryElementsWithResponse call
-func ParseGetStoryElementsResponse(rsp *http.Response) (*GetStoryElementsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetStoryElementsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest models.StoryElement
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePostStoryElementsResponse parses an HTTP response from a PostStoryElementsWithResponse call
 func ParsePostStoryElementsResponse(rsp *http.Response) (*PostStoryElementsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -933,6 +866,32 @@ func ParsePostStoryElementsResponse(rsp *http.Response) (*PostStoryElementsRespo
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetStoryElementsNodeIdResponse parses an HTTP response from a GetStoryElementsNodeIdWithResponse call
+func ParseGetStoryElementsNodeIdResponse(rsp *http.Response) (*GetStoryElementsNodeIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetStoryElementsNodeIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest models.StoryElement
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 

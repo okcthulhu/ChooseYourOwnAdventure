@@ -24,25 +24,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Player'
-    get:
-      summary: "Retrieve a player's state."
-      parameters:
-        - name: "id"
-          in: "query"
-          schema:
-            type: "string"
-        - name: "wixid"
-          in: "query"
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Player state retrieved."
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Player'
 
   /player/{playerId}:
     patch:
@@ -53,6 +34,7 @@ paths:
           required: true
           schema:
             type: "string"
+            format: "uuid"
       requestBody:
         required: true
         content:
@@ -62,6 +44,22 @@ paths:
       responses:
         "200":
           description: "Player state updated."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+    get:
+      summary: "Retrieve a player's state."
+      parameters:
+        - name: "playerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Player state retrieved."
           content:
             application/json:
               schema:
@@ -83,11 +81,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StoryElement'
+
+  /storyElements/{nodeId}:
     get:
       summary: "Retrieve a story node."
       parameters:
         - name: "nodeId"
-          in: "query"
+          in: "path"
           required: true
           schema:
             type: "string"
@@ -98,8 +98,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StoryElement'
-
-  /storyElements/{nodeId}:
     put:
       summary: "Update a story node by its ID."
       parameters:
@@ -156,10 +154,7 @@ components:
       type: "object"
       properties:
         _id:
-          type: "object"
-          properties:
-            $oid:
-              type: "string"
+          type: "string"  # Updated from object, assuming you'll be interacting with it as a hex string
         nodeID:
           type: "string"
         chapter:
