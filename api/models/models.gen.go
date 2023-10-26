@@ -9,37 +9,40 @@ import (
 
 // Player defines model for Player.
 type Player struct {
-	Id         *string `json:"_id,omitempty"`
-	Email      *string `json:"email,omitempty"`
-	StoryState *struct {
-		Artifacts      *[]string `json:"artifacts,omitempty"`
-		CurrentChapter *string   `json:"currentChapter,omitempty"`
-		CurrentPart    *string   `json:"currentPart,omitempty"`
-		Wisdoms        *[]string `json:"wisdoms,omitempty"`
-	} `json:"storyState,omitempty"`
-	Username *string             `json:"username,omitempty"`
-	WixID    *openapi_types.UUID `json:"wixID,omitempty"`
+	Id          *string `json:"_id,omitempty" bson:"_id,omitempty"`
+	Email       *string `json:"email,omitempty" bson:"email,omitempty"`
+	StoryStates *[]struct {
+		Artifacts      *[]string `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
+		CurrentChapter *string   `json:"currentChapter,omitempty" bson:"currentChapter,omitempty"`
+		CurrentPart    *string   `json:"currentPart,omitempty" bson:"currentPart,omitempty"`
+		StoryID        *string   `json:"storyID,omitempty" bson:"storyID,omitempty"`
+		Wisdoms        *[]string `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
+	} `json:"storyStates,omitempty" bson:"storyStates,omitempty"`
+	Username *string             `json:"username,omitempty" bson:"username,omitempty"`
+	WixID    *openapi_types.UUID `json:"wixID,omitempty" bson:"wixID,omitempty"`
 }
 
 // StoryElement defines model for StoryElement.
 type StoryElement struct {
-	Id        *string                   `json:"_id,omitempty"`
-	Artifacts *[]map[string]interface{} `json:"artifacts,omitempty"`
+	Id        *string                   `json:"_id,omitempty" bson:"_id,omitempty"`
+	Artifacts *[]map[string]interface{} `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
 	Chapter   *struct {
-		ArtURL   *string `json:"artURL,omitempty"`
-		Name     *string `json:"name,omitempty"`
-		VideoURL *string `json:"videoURL,omitempty"`
-	} `json:"chapter,omitempty"`
-	Content *string                   `json:"content,omitempty"`
-	NodeID  *string                   `json:"nodeID,omitempty"`
-	Options *[]map[string]interface{} `json:"options,omitempty"`
+		ArtURL   *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
+		Name     *string `json:"name,omitempty" bson:"name,omitempty"`
+		VideoURL *string `json:"videoURL,omitempty" bson:"videoURL,omitempty"`
+	} `json:"chapter,omitempty" bson:"chapter,omitempty"`
+	Content *string                   `json:"content,omitempty" bson:"content,omitempty"`
+	NodeID  *string                   `json:"nodeID,omitempty" bson:"nodeID,omitempty"`
+	Options *[]map[string]interface{} `json:"options,omitempty" bson:"options,omitempty"`
 	Part    *struct {
-		ArtURL   *string `json:"artURL,omitempty"`
-		Name     *string `json:"name,omitempty"`
-		VideoURL *string `json:"videoURL,omitempty"`
-	} `json:"part,omitempty"`
-	Wisdoms *[]map[string]interface{} `json:"wisdoms,omitempty"`
+		ArtURL   *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
+		Name     *string `json:"name,omitempty" bson:"name,omitempty"`
+		VideoURL *string `json:"videoURL,omitempty" bson:"videoURL,omitempty"`
+	} `json:"part,omitempty" bson:"part,omitempty"`
+	StoryID *string                   `json:"storyID,omitempty" bson:"storyID,omitempty"`
+	Wisdoms *[]map[string]interface{} `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
 }
+
 
 // PostPlayerJSONRequestBody defines body for PostPlayer for application/json ContentType.
 type PostPlayerJSONRequestBody = Player

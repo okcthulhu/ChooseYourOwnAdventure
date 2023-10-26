@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,78 +49,52 @@ func NewHandler() *Handler {
 func (h *Handler) CreatePlayerState(c echo.Context) error {
 	playerState := new(models.PostPlayerJSONRequestBody)
 	if err := c.Bind(playerState); err != nil {
+		log.Println("Failed to bind playerState:", err)
 		return err
 	}
 
-	collection := h.DB.Database("cyoa").Collection("player")
+	log.Println("PlayerState to be inserted:", playerState)
 
-	_, err := collection.InsertOne(context.Background(), playerState)
+	collection := h.DB.Database("cyoa").Collection("players")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := collection.InsertOne(ctx, playerState)
 	if err != nil {
-		log.Print(err)
+		log.Println("Failed to insert player state:", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to create player state")
 	}
 
+	log.Println("InsertOne result:", result)
+
 	return c.JSON(http.StatusCreated, playerState)
-}
-
-// GetPlayerState fetches the current state of a player from the database
-// given a playerId. The function returns a JSON response containing the
-// player's state if found, or a 404 status code if the player is not found.
-func (h *Handler) GetPlayerState(c echo.Context, playerId string) error {
-	collection := h.DB.Database("cyoa").Collection("player")
-	var playerState models.Player
-
-	// Convert string to ObjectID
-	objectId, err := primitive.ObjectIDFromHex(playerId)
-	if err != nil {
-		log.Print(err)
-		return c.JSON(http.StatusBadRequest, "Invalid ID format")
-	}
-
-	filter := bson.M{"_id": objectId}
-
-	err = collection.FindOne(context.Background(), filter).Decode(&playerState)
-	if err != nil {
-		log.Print(err)
-		return c.JSON(http.StatusNotFound, "Player not found")
-	}
-
-	return c.JSON(http.StatusOK, playerState)
 }
 
 // GetPlayerStateByWixID fetches the current state of a player from the database
 // given a WixID. The function returns a JSON response containing the
 // player's state if found, or a 404 status code if the player is not found.
 func (h *Handler) GetPlayerStateByWixID(c echo.Context, wixID string) error {
-	collection := h.DB.Database("cyoa").Collection("player")
-	var playerState models.Player
-	filter := bson.M{"wixID": wixID}
-
-	err := collection.FindOne(context.Background(), filter).Decode(&playerState)
+	// Convert wixID to UUID
+	parsedUUID, err := uuid.Parse(wixID)
 	if err != nil {
-		log.Print(err)
-		return c.JSON(http.StatusNotFound, "Player not found")
+		log.Print("Failed to parse wixID to UUID: ", err)
+		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
 	}
 
-	return c.JSON(http.StatusOK, playerState)
-}
-
-// GetPlayerStateByUsername fetches the current state of a player from the database
-// given a username. The function returns a JSON response containing the
-// player's state if found, or a 404 status code if the player is not found.
-func (h *Handler) GetPlayerStateByUsername(c echo.Context) error {
-	username := c.QueryParam("username")
-	if username == "" {
-		return c.JSON(http.StatusBadRequest, "Username is required")
+	// Convert UUID to primitive.Binary for MongoDB
+	binaryUUID := primitive.Binary{
+		Subtype: 0x04, // UUID subtype
+		Data:    parsedUUID[:],
 	}
 
-	collection := h.DB.Database("cyoa").Collection("player")
+	collection := h.DB.Database("cyoa").Collection("players")
 	var playerState models.Player
-	filter := bson.M{"username": username}
+	filter := bson.M{"wixID": binaryUUID}
 
-	err := collection.FindOne(context.Background(), filter).Decode(&playerState)
+	err = collection.FindOne(context.Background(), filter).Decode(&playerState)
 	if err != nil {
-		log.Printf("Error: %v\n", err)
+		log.Print("FindOne error: ", err)
 		return c.JSON(http.StatusNotFound, "Player not found")
 	}
 
@@ -128,21 +103,27 @@ func (h *Handler) GetPlayerStateByUsername(c echo.Context) error {
 
 // UpdatePlayerState modifies an existing player's state in the database based on the provided updates.
 // The function expects a JSON-formatted request body containing the updated attributes of the player state,
-// as well as the player's unique ID to identify which record to update.
+// as well as the player's Wix ID to identify which record to update.
 // Upon successful update, the function returns a JSON-formatted response reflecting the modified player state.
-// If the update operation fails or if the specified player ID does not exist,
+// If the update operation fails or if the specified Wix ID does not exist,
 // an appropriate HTTP status code and an error message are returned.
-func (h *Handler) UpdatePlayerState(c echo.Context, playerId string, playerState models.PatchPlayerPlayerIdJSONRequestBody) error {
-	collection := h.DB.Database("cyoa").Collection("player")
-
-	// Convert string to ObjectID
-	objectId, err := primitive.ObjectIDFromHex(playerId)
+func (h *Handler) UpdatePlayerState(c echo.Context, wixID string, playerState models.PatchPlayerPlayerIdJSONRequestBody) error {
+	// Convert wixID to UUID
+	parsedUUID, err := uuid.Parse(wixID)
 	if err != nil {
-		log.Print(err)
-		return c.JSON(http.StatusBadRequest, "Invalid ID format")
+		log.Print("Failed to parse wixID to UUID: ", err)
+		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
 	}
 
-	filter := bson.M{"_id": objectId}
+	// Convert UUID to primitive.Binary for MongoDB
+	binaryUUID := primitive.Binary{
+		Subtype: 0x04, // UUID subtype
+		Data:    parsedUUID[:],
+	}
+
+	collection := h.DB.Database("cyoa").Collection("players")
+
+	filter := bson.M{"wixID": binaryUUID}
 	update := bson.M{"$set": playerState}
 
 	_, err = collection.UpdateOne(context.Background(), filter, update)
@@ -203,10 +184,14 @@ func (h *Handler) UpdateStoryElement(c echo.Context, nodeId string, storyElement
 	filter := bson.M{"nodeID": nodeId}
 	update := bson.M{"$set": storyElement}
 
-	_, err := collection.UpdateOne(context.Background(), filter, update)
+	updateResult, err := collection.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		log.Print(err)
-		return c.JSON(http.StatusNotFound, "Story element not found or update failed")
+		return c.JSON(http.StatusInternalServerError, "Update failed due to an internal error")
+	}
+
+	if updateResult.ModifiedCount == 0 {
+		return c.JSON(http.StatusNotFound, "Story element not found")
 	}
 
 	return c.JSON(http.StatusOK, "Story element updated successfully")

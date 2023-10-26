@@ -134,27 +134,33 @@ components:
           type: "string"
         email:
           type: "string"
-        storyState:
-          type: "object"
-          properties:
-            currentChapter:
-              type: "string"
-            currentPart:
-              type: "string"
-            wisdoms:
-              type: "array"
-              items:
+        storyStates:  
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              storyID:
                 type: "string"
-            artifacts:
-              type: "array"
-              items:
+              currentChapter:
                 type: "string"
+              currentPart:
+                type: "string"
+              wisdoms:
+                type: "array"
+                items:
+                  type: "string"
+              artifacts:
+                type: "array"
+                items:
+                  type: "string"
 
     StoryElement:
       type: "object"
       properties:
         _id:
           type: "string"  # Updated from object, assuming you'll be interacting with it as a hex string
+        storyID:
+          type: "string"
         nodeID:
           type: "string"
         chapter:
