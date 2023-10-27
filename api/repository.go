@@ -23,7 +23,7 @@ var (
 	tUUID       = reflect.TypeOf(uuid.UUID{})
 	uuidSubtype = byte(0x04)
 
-	mongoRegistry = bson.NewRegistryBuilder().
+	MongoRegistry = bson.NewRegistryBuilder().
 			RegisterTypeEncoder(tUUID, bsoncodec.ValueEncoderFunc(uuidEncodeValue)).
 			RegisterTypeDecoder(tUUID, bsoncodec.ValueDecoderFunc(uuidDecodeValue)).
 			Build()

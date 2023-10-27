@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,29 +15,73 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Handler struct {
-	DB *mongo.Client
+// MongoClientInterface serves as an abstraction over the native MongoDB client.
+// It exposes just enough functionality to perform essential database operations,
+// thereby adhering to the Interface Segregation Principle.
+type MongoClientInterface interface {
+	// Database gets a handle for a MongoDB database with the given name.
+	Database(name string, opts ...*options.DatabaseOptions) *mongo.Database
 }
 
-// NewHandler initializes a new Handler struct with a MongoDB client.
-// It establishes a connection to the MongoDB database by applying the given URI.
-// A context with a timeout is also set up to handle the database connection.
-// The function returns a pointer to the newly created Handler, which includes the MongoDB client.
-// If the connection to MongoDB fails, an error message is printed to the console.
-func NewHandler() *Handler {
-	clientOptions := options.Client().
-		ApplyURI("mongodb+srv://n8gallenson:Lg2ke370DwkQe7QO@cyoa01.m1d2ueq.mongodb.net/?retryWrites=true&w=majority").
-		SetRegistry(mongoRegistry)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+// PlayerCollection defines the required behavior for interacting with
+// the player-related data in MongoDB. By isolating these methods, we can
+// easily swap out the actual MongoDB collection with a mock for testing.
+type PlayerCollection interface {
+	// InsertOne adds a new document to the players collection. It returns the
+	// result of the insertion operation, which includes the ID of the newly
+	// inserted document, or an error if the operation fails.
+	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
-		fmt.Println("Failed to connect to MongoDB:", err)
-	}
+	// FindOne searches for a single document in the players collection that matches
+	// the filter. The method returns a single result which can be decoded to
+	// obtain the document's data.
+	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
+	UpdateOne(ctx context.Context, filter interface{}, update interface{},
+		opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+}
 
+// StoryCollection behaves similarly to PlayerCollection but is intended
+// for story elements. This separation makes the system more modular and adheres
+// to the Single Responsibility and Interface Segregation Principles.
+type StoryCollection interface {
+	// InsertOne adds a new document to the story elements collection. The method returns
+	// the result of the insertion, which contains the ID of the new document, or an error.
+	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
+
+	// FindOne locates a single document from the story elements collection based on the filter.
+	// A single result is returned, which can be decoded to access the actual document.
+	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
+	UpdateOne(ctx context.Context, filter interface{}, update interface{},
+		opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+}
+
+// Handler is the main orchestrator for the application's HTTP API. It aggregates
+// various dependencies needed to process incoming HTTP requests and produce
+// appropriate responses. The fields in this struct adhere to interfaces, thus
+// allowing easy substitution for testing and extending functionality.
+type Handler struct {
+	// DB is an abstraction over the MongoDB client, allowing the handler to
+	// interact with any MongoDB database.
+	DB MongoClientInterface
+
+	// PlayerCol is an abstraction for the MongoDB collection containing player data.
+	PlayerCol PlayerCollection
+
+	// StoryCol is an abstraction for the MongoDB collection containing story elements.
+	StoryCol StoryCollection
+}
+
+// NewHandler serves as a factory function for creating a new instance of the Handler struct.
+// It takes in implementations of MongoClientInterface, PlayerCollection, and StoryCollection
+// as arguments. By providing these as interfaces, this function allows for greater flexibility
+// and testability. For example, you can provide mock implementations when you're writing tests.
+// The function returns a pointer to the newly created Handler instance, fully equipped with
+// the necessary dependencies for database interactions related to both player and story elements.
+func NewHandler(client MongoClientInterface, playerCol PlayerCollection, storyCol StoryCollection) *Handler {
 	return &Handler{
-		DB: client,
+		DB:        client,
+		PlayerCol: playerCol,
+		StoryCol:  storyCol,
 	}
 }
 
@@ -53,20 +96,14 @@ func (h *Handler) CreatePlayerState(c echo.Context) error {
 		return err
 	}
 
-	log.Println("PlayerState to be inserted:", playerState)
-
-	collection := h.DB.Database("cyoa").Collection("players")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	result, err := collection.InsertOne(ctx, playerState)
+	_, err := h.PlayerCol.InsertOne(ctx, playerState)
 	if err != nil {
 		log.Println("Failed to insert player state:", err)
 		return c.JSON(http.StatusInternalServerError, "Failed to create player state")
 	}
-
-	log.Println("InsertOne result:", result)
 
 	return c.JSON(http.StatusCreated, playerState)
 }
@@ -75,26 +112,21 @@ func (h *Handler) CreatePlayerState(c echo.Context) error {
 // given a WixID. The function returns a JSON response containing the
 // player's state if found, or a 404 status code if the player is not found.
 func (h *Handler) GetPlayerStateByWixID(c echo.Context, wixID string) error {
-	// Convert wixID to UUID
 	parsedUUID, err := uuid.Parse(wixID)
 	if err != nil {
-		log.Print("Failed to parse wixID to UUID: ", err)
 		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
 	}
 
-	// Convert UUID to primitive.Binary for MongoDB
 	binaryUUID := primitive.Binary{
-		Subtype: 0x04, // UUID subtype
+		Subtype: 0x04,
 		Data:    parsedUUID[:],
 	}
 
-	collection := h.DB.Database("cyoa").Collection("players")
-	var playerState models.Player
 	filter := bson.M{"wixID": binaryUUID}
-
-	err = collection.FindOne(context.Background(), filter).Decode(&playerState)
+	singleResult := h.PlayerCol.FindOne(context.Background(), filter)
+	var playerState models.Player
+	err = singleResult.Decode(&playerState)
 	if err != nil {
-		log.Print("FindOne error: ", err)
 		return c.JSON(http.StatusNotFound, "Player not found")
 	}
 
@@ -108,27 +140,20 @@ func (h *Handler) GetPlayerStateByWixID(c echo.Context, wixID string) error {
 // If the update operation fails or if the specified Wix ID does not exist,
 // an appropriate HTTP status code and an error message are returned.
 func (h *Handler) UpdatePlayerState(c echo.Context, wixID string, playerState models.PatchPlayerPlayerIdJSONRequestBody) error {
-	// Convert wixID to UUID
 	parsedUUID, err := uuid.Parse(wixID)
 	if err != nil {
-		log.Print("Failed to parse wixID to UUID: ", err)
 		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
 	}
 
-	// Convert UUID to primitive.Binary for MongoDB
 	binaryUUID := primitive.Binary{
-		Subtype: 0x04, // UUID subtype
+		Subtype: 0x04,
 		Data:    parsedUUID[:],
 	}
 
-	collection := h.DB.Database("cyoa").Collection("players")
-
 	filter := bson.M{"wixID": binaryUUID}
 	update := bson.M{"$set": playerState}
-
-	_, err = collection.UpdateOne(context.Background(), filter, update)
+	_, err = h.PlayerCol.UpdateOne(context.Background(), filter, update)
 	if err != nil {
-		log.Print(err)
 		return c.JSON(http.StatusNotFound, "Player not found or update failed")
 	}
 
@@ -145,11 +170,8 @@ func (h *Handler) CreateStoryElement(c echo.Context) error {
 		return err
 	}
 
-	collection := h.DB.Database("cyoa").Collection("storyElements")
-
-	_, err := collection.InsertOne(context.Background(), storyElement)
+	_, err := h.StoryCol.InsertOne(context.Background(), storyElement)
 	if err != nil {
-		log.Print(err)
 		return c.JSON(http.StatusInternalServerError, "Failed to create story element")
 	}
 
@@ -160,11 +182,10 @@ func (h *Handler) CreateStoryElement(c echo.Context) error {
 // The function returns a JSON-formatted response containing the details of the story element.
 // If the story element is not found in the database, a 404 status code is returned.
 func (h *Handler) GetStoryElement(c echo.Context, nodeId string) error {
-	collection := h.DB.Database("cyoa").Collection("storyElements")
-	var storyElement models.StoryElement
 	filter := bson.M{"nodeID": nodeId}
-
-	err := collection.FindOne(context.Background(), filter).Decode(&storyElement)
+	singleResult := h.StoryCol.FindOne(context.Background(), filter)
+	var storyElement models.StoryElement
+	err := singleResult.Decode(&storyElement)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, "Story Element not found")
 	}
@@ -179,19 +200,11 @@ func (h *Handler) GetStoryElement(c echo.Context, nodeId string) error {
 // If the update operation fails or if the specified NodeId does not exist,
 // an appropriate HTTP status code and an error message are returned.
 func (h *Handler) UpdateStoryElement(c echo.Context, nodeId string, storyElement models.PutStoryElementsNodeIdJSONRequestBody) error {
-	collection := h.DB.Database("cyoa").Collection("storyElements")
-
 	filter := bson.M{"nodeID": nodeId}
 	update := bson.M{"$set": storyElement}
-
-	updateResult, err := collection.UpdateOne(context.Background(), filter, update)
+	_, err := h.StoryCol.UpdateOne(context.Background(), filter, update)
 	if err != nil {
-		log.Print(err)
 		return c.JSON(http.StatusInternalServerError, "Update failed due to an internal error")
-	}
-
-	if updateResult.ModifiedCount == 0 {
-		return c.JSON(http.StatusNotFound, "Story element not found")
 	}
 
 	return c.JSON(http.StatusOK, "Story element updated successfully")
