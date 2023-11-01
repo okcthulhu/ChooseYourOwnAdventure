@@ -122,11 +122,29 @@ paths:
 
 components:
   schemas:
+    StoryState:  
+      type: "object"
+      properties:
+        storyID:
+          type: "string"
+        currentChapter:
+          type: "string"
+        currentPart:
+          type: "string"
+        wisdoms:
+          type: "array"
+          items:
+            type: "string"
+        artifacts:
+          type: "array"
+          items:
+            type: "string"
+
     Player:
       type: "object"
       properties:
         _id:
-          type: "string"  # Updated from object, assuming you'll be interacting with it as a hex string
+          type: "string"
         wixID:
           type: "string"
           format: "uuid"
@@ -134,25 +152,10 @@ components:
           type: "string"
         email:
           type: "string"
-        storyStates:  
+        storyStates:
           type: "array"
           items:
-            type: "object"
-            properties:
-              storyID:
-                type: "string"
-              currentChapter:
-                type: "string"
-              currentPart:
-                type: "string"
-              wisdoms:
-                type: "array"
-                items:
-                  type: "string"
-              artifacts:
-                type: "array"
-                items:
-                  type: "string"
+            $ref: '#/components/schemas/StoryState'
 
     StoryElement:
       type: "object"

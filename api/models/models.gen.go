@@ -9,17 +9,11 @@ import (
 
 // Player defines model for Player.
 type Player struct {
-	Id          *string `json:"_id,omitempty" bson:"_id,omitempty"`
-	Email       *string `json:"email,omitempty" bson:"email,omitempty"`
-	StoryStates *[]struct {
-		Artifacts      *[]string `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
-		CurrentChapter *string   `json:"currentChapter,omitempty" bson:"currentChapter,omitempty"`
-		CurrentPart    *string   `json:"currentPart,omitempty" bson:"currentPart,omitempty"`
-		StoryID        *string   `json:"storyID,omitempty" bson:"storyID,omitempty"`
-		Wisdoms        *[]string `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
-	} `json:"storyStates,omitempty" bson:"storyStates,omitempty"`
-	Username *string             `json:"username,omitempty" bson:"username,omitempty"`
-	WixID    *openapi_types.UUID `json:"wixID,omitempty" bson:"wixID,omitempty"`
+	Id          *string             `json:"_id,omitempty" bson:"_id,omitempty"`
+	Email       *string             `json:"email,omitempty" bson:"email,omitempty"`
+	StoryStates *[]StoryState       `json:"storyStates,omitempty" bson:"storyStates,omitempty"`
+	Username    *string             `json:"username,omitempty" bson:"username,omitempty"`
+	WixID       *openapi_types.UUID `json:"wixID,omitempty" bson:"wixID,omitempty"`
 }
 
 // StoryElement defines model for StoryElement.
@@ -41,6 +35,15 @@ type StoryElement struct {
 	} `json:"part,omitempty" bson:"part,omitempty"`
 	StoryID *string                   `json:"storyID,omitempty" bson:"storyID,omitempty"`
 	Wisdoms *[]map[string]interface{} `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
+}
+
+// StoryState defines model for StoryState.
+type StoryState struct {
+	Artifacts      *[]string `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
+	CurrentChapter *string   `json:"currentChapter,omitempty" bson:"currentChapter,omitempty"`
+	CurrentPart    *string   `json:"currentPart,omitempty" bson:"currentPart,omitempty"`
+	StoryID        *string   `json:"storyID,omitempty" bson:"storyID,omitempty"`
+	Wisdoms        *[]string `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
 }
 
 

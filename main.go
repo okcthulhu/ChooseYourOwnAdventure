@@ -41,7 +41,8 @@ func main() {
 
 	playerCol := client.Database("cyoa").Collection("players")
 	storyCol := client.Database("cyoa").Collection("storyElements")
-	handler := api.NewHandler(client, playerCol, storyCol)
+	playerHandler := api.NewPlayerHandler(playerCol)
+	storyHandler := api.NewStoryHandler(storyCol)
 
 	// Handle port flag
 	var port string
@@ -55,10 +56,10 @@ func main() {
 	// General route comes first
 
 	//Player routes
-	e.POST("/player", handler.CreatePlayerState)
+	e.POST("/player", playerHandler.CreatePlayerState)
 	e.GET("/player/:wixID", func(c echo.Context) error {
 		wixID := c.Param("wixID")
-		return handler.GetPlayerStateByWixID(c, wixID)
+		return playerHandler.GetPlayerStateByWixID(c, wixID)
 	})
 	e.PATCH("/player/:wixID", func(c echo.Context) error {
 		wixID := c.Param("wixID")
@@ -66,20 +67,20 @@ func main() {
 		if err := c.Bind(playerState); err != nil {
 			return err
 		}
-		return handler.UpdatePlayerState(c, wixID, *playerState)
+		return playerHandler.UpdatePlayerState(c, wixID, *playerState)
 	})
 
 	// StoryElement routes
-	e.POST("/storyElements", handler.CreateStoryElement)
+	e.POST("/storyElements", storyHandler.CreateStoryElement)
 	e.GET("/storyElements/:nodeId", func(c echo.Context) error {
-		return handler.GetStoryElement(c, c.Param("nodeId"))
+		return storyHandler.GetStoryElement(c, c.Param("nodeId"))
 	})
 	e.PUT("/storyElements/:nodeId", func(c echo.Context) error {
 		storyElement := new(models.StoryElement)
 		if err := c.Bind(storyElement); err != nil {
 			return err
 		}
-		return handler.UpdateStoryElement(c, c.Param("nodeId"), *storyElement)
+		return storyHandler.UpdateStoryElement(c, c.Param("nodeId"), *storyElement)
 	})
 
 	// Start the Echo web server
