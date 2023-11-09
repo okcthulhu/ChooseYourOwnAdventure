@@ -63,7 +63,3 @@ If you are not able to insert data into MongoDB when creating a player state or 
 ## License
 
 This project is licensed under the MIT License
-
----
-
-Feel free to add or remove sections based on the requirements of your project. A good README file often makes a big difference in how smoothly development and collaboration go.
