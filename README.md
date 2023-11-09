@@ -1,7 +1,3 @@
-Certainly, a well-documented README file is invaluable for both individual developers and teams. It streamlines the setup process and serves as a useful reference for project details. Here's how you might structure the README for your Choose Your Own Adventure API project, using Markdown format.
-
----
-
 # Choose Your Own Adventure API
 
 ## Project Description
