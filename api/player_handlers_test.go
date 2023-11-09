@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 	"github.com/stretchr/testify/assert"
@@ -26,32 +27,29 @@ func TestCreatePlayerState_PlayerCreated(t *testing.T) {
 	defer mt.Close()
 
 	mt.Run("player created", func(mt *mtest.T) {
-		artifacts := []string{"artifact1", "artifact2"}
-		currentChapter := "chapter1"
-		currentPart := "part1"
+		currentStoryNodeID := "some story node ID"
 		storyID := "someStoryId"
-		wisdoms := []string{"wisdom1", "wisdom2"}
+		wisdoms := []models.Wisdom{{
+			Name:     "wisdom 1",
+			WisdomID: "wisdom id 1",
+		}}
 
 		storyState := models.StoryState{
-			Artifacts:      &artifacts,
-			CurrentChapter: &currentChapter,
-			CurrentPart:    &currentPart,
-			StoryID:        &storyID,
-			Wisdoms:        &wisdoms,
+			CurrentStoryNodeID: currentStoryNodeID,
+			StoryID:            storyID,
+			Wisdoms:            &wisdoms,
 		}
 
 		storyStates := []models.StoryState{storyState}
 
-		email := "test@example.com"
-		username := "TestUser"
+		var email openapi_types.Email = "test@example.com"
 		wixID := uuid.New()
 
 		// Create request payload
-		playerState := &models.PostPlayerJSONRequestBody{
-			Email:       &email,
+		playerState := &models.PostPlayersJSONRequestBody{
+			Email:       email,
 			StoryStates: &storyStates,
-			Username:    &username,
-			WixID:       &wixID,
+			WixID:       wixID,
 		}
 
 		playerStateJSON, err := json.Marshal(playerState)
@@ -89,15 +87,13 @@ func TestCreatePlayerState_InsertFailed(t *testing.T) {
 	defer mt.Close()
 
 	mt.Run("failed insertion into MongoDB", func(mt *mtest.T) {
-		email := "test@example.com"
-		username := "TestUser"
+		var email openapi_types.Email = "test@example.com"
 		wixID := uuid.New()
 
 		// Create request payload
-		playerState := &models.PostPlayerJSONRequestBody{
-			Email:    &email,
-			Username: &username,
-			WixID:    &wixID,
+		playerState := &models.PostPlayersJSONRequestBody{
+			Email: email,
+			WixID: wixID,
 		}
 
 		playerStateJSON, err := json.Marshal(playerState)
@@ -181,15 +177,13 @@ func TestGetPlayerStateByWixID_PlayerFound(t *testing.T) {
 	defer mt.Close()
 
 	mt.Run("player found", func(mt *mtest.T) {
-		email := "test@example.com"
-		username := "TestUser"
+		var email openapi_types.Email = "test@example.com"
 		wixID := uuid.New()
 
 		// Create request payload
-		playerState := &models.PostPlayerJSONRequestBody{
-			Email:    &email,
-			Username: &username,
-			WixID:    &wixID,
+		playerState := &models.PostPlayersJSONRequestBody{
+			Email: email,
+			WixID: wixID,
 		}
 
 		req := httptest.NewRequest("GET", fmt.Sprintf("/player/%s", wixID), nil)
@@ -209,7 +203,7 @@ func TestGetPlayerStateByWixID_PlayerFound(t *testing.T) {
 		h.GetPlayerStateByWixID(c, wixID.String())
 
 		assert.Equal(t, http.StatusOK, rec.Code)
-		expectedResponse := fmt.Sprintf("{\"email\":\"%s\",\"wixID\":\"%s\"}", *playerState.Email, playerState.WixID.String())
+		expectedResponse := fmt.Sprintf("{\"email\":\"%s\",\"wixID\":\"%s\"}", playerState.Email, playerState.WixID.String())
 		assert.Equal(t, expectedResponse, strings.TrimSuffix(rec.Body.String(), "\n"))
 	})
 }
@@ -258,20 +252,99 @@ func TestGetPlayerStateByWixID_PlayerNotFound(t *testing.T) {
 
 // UpdatePlayerState
 
+func TestUpdatePlayerState_InvalidWixID(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("invalid WixID format", func(mt *mtest.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPatch, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		h := api.NewPlayerHandler(mt.Coll)
+		h.UpdatePlayerState(c, "invalidUUID", models.PatchPlayersPlayerIdJSONRequestBody{})
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Invalid WixID format")
+	})
+}
+
+func TestUpdatePlayerState_NoStoryStates(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("no story states provided", func(mt *mtest.T) {
+		e := echo.New()
+		wixID := uuid.New().String()
+		req := httptest.NewRequest(http.MethodPatch, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		h := api.NewPlayerHandler(mt.Coll)
+		h.UpdatePlayerState(c, wixID, models.PatchPlayersPlayerIdJSONRequestBody{})
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "No story states provided")
+	})
+}
+
+func TestUpdatePlayerState_ValidUpdate(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("valid update", func(mt *mtest.T) {
+		e := echo.New()
+		playerID := uuid.New().String()
+		playerWixID := uuid.New()  // Generating a new UUID for the WixID
+		storyID := "someStoryID"   // Use a test story ID
+		wisdomID := "someWisdomID" // Use a test wisdom ID
+
+		playerUpdate := models.PatchPlayersPlayerIdJSONRequestBody{
+			Email: "test@email.com",
+			StoryStates: &[]models.StoryState{{
+				CurrentStoryNodeID: "testStoryNodeID",
+				StoryID:            storyID,
+				Wisdoms: &[]models.Wisdom{{
+					Name:        "Test Wisdom",
+					WisdomID:    wisdomID,
+					Description: new(string),
+					ArtURL:      new(string),
+				}},
+			}},
+			WixID: playerWixID,
+		}
+
+		req := httptest.NewRequest(http.MethodPatch, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		// Mock the first update response for setting wisdom details
+		// mt.AddMockResponses(mtest.CreateWriteErrorsResponse(errors.New("duplicate"), 11000))
+
+		// Mock the second update response for adding new wisdom
+		mt.AddMockResponses(mtest.CreateSuccessResponse())
+
+		h := api.NewPlayerHandler(mt.Coll)
+
+		err := h.UpdatePlayerState(c, playerID, playerUpdate)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Player state updated successfully")
+	})
+}
+
 func TestUpdatePlayerState_Success(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
 	mt.Run("player state updated", func(mt *mtest.T) {
-		email := "test@example.com"
-		username := "TestUser"
+		var email openapi_types.Email = "test@example.com"
 		wixID := uuid.New()
 
 		// Create request payload
-		playerState := &models.PatchPlayerPlayerIdJSONRequestBody{
-			Email:    &email,
-			Username: &username,
-			WixID:    &wixID,
+		playerState := &models.PatchPlayersPlayerIdJSONRequestBody{
+			Email: email,
+			WixID: wixID,
 		}
 
 		req := httptest.NewRequest("PATCH", fmt.Sprintf("/player/%s", wixID), nil)
@@ -293,21 +366,21 @@ func TestUpdatePlayerState_Success(t *testing.T) {
 	})
 }
 
-func TestUpdatePlayerState_InvalidWixID(t *testing.T) {
-	wixID := "invalidWixID"
+// func TestUpdatePlayerState_InvalidWixID(t *testing.T) {
+// 	wixID := "invalidWixID"
 
-	req := httptest.NewRequest("PATCH", fmt.Sprintf("/player/%s", wixID), nil)
-	rec := httptest.NewRecorder()
-	e := echo.New()
-	c := e.NewContext(req, rec)
-	c.Set("wixID", wixID)
+// 	req := httptest.NewRequest("PATCH", fmt.Sprintf("/player/%s", wixID), nil)
+// 	rec := httptest.NewRecorder()
+// 	e := echo.New()
+// 	c := e.NewContext(req, rec)
+// 	c.Set("wixID", wixID)
 
-	h := api.NewPlayerHandler(nil) // Passing nil as we expect this to fail before DB interaction
+// 	h := api.NewPlayerHandler(nil) // Passing nil as we expect this to fail before DB interaction
 
-	h.UpdatePlayerState(c, wixID, models.PatchPlayerPlayerIdJSONRequestBody{})
-	assert.Equal(t, "\"Invalid WixID format\"", strings.TrimSuffix(rec.Body.String(), "\n"))
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-}
+// 	h.UpdatePlayerState(c, wixID, models.PatchPlayersPlayerIdJSONRequestBody{})
+// 	assert.Equal(t, "\"Invalid WixID format\"", strings.TrimSuffix(rec.Body.String(), "\n"))
+// 	assert.Equal(t, http.StatusBadRequest, rec.Code)
+// }
 
 func TestUpdatePlayerState_FailedUpdate(t *testing.T) {
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
@@ -315,7 +388,7 @@ func TestUpdatePlayerState_FailedUpdate(t *testing.T) {
 
 	mt.Run("player update failed", func(mt *mtest.T) {
 		wixID := uuid.New()
-		playerState := models.PatchPlayerPlayerIdJSONRequestBody{
+		playerState := models.PatchPlayersPlayerIdJSONRequestBody{
 			// populate the fields
 		}
 

@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/okcthulhu/ChooseYourOwnAdventure/api/models"
 )
 
@@ -91,35 +90,38 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// PostPlayerWithBody request with any body
-	PostPlayerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostPlayersWithBody request with any body
+	PostPlayersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostPlayer(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostPlayers(ctx context.Context, body models.PostPlayersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetPlayerPlayerId request
-	GetPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetPlayersPlayerId request
+	GetPlayersPlayerId(ctx context.Context, playerId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchPlayerPlayerIdWithBody request with any body
-	PatchPlayerPlayerIdWithBody(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchPlayersPlayerIdWithBody request with any body
+	PatchPlayersPlayerIdWithBody(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchPlayersPlayerId(ctx context.Context, playerId string, body models.PatchPlayersPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostStoryElementsWithBody request with any body
 	PostStoryElementsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostStoryElements(ctx context.Context, body models.PostStoryElementsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteStoryElementsNodeId request
+	DeleteStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetStoryElementsNodeId request
 	GetStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutStoryElementsNodeIdWithBody request with any body
-	PutStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchStoryElementsNodeIdWithBody request with any body
+	PatchStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutStoryElementsNodeId(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchStoryElementsNodeId(ctx context.Context, nodeId string, body models.PatchStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) PostPlayerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPlayerRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostPlayersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPlayersRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +132,8 @@ func (c *Client) PostPlayerWithBody(ctx context.Context, contentType string, bod
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPlayer(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPlayerRequest(c.Server, body)
+func (c *Client) PostPlayers(ctx context.Context, body models.PostPlayersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPlayersRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +144,8 @@ func (c *Client) PostPlayer(ctx context.Context, body models.PostPlayerJSONReque
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetPlayerPlayerIdRequest(c.Server, playerId)
+func (c *Client) GetPlayersPlayerId(ctx context.Context, playerId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPlayersPlayerIdRequest(c.Server, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +156,8 @@ func (c *Client) GetPlayerPlayerId(ctx context.Context, playerId openapi_types.U
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchPlayerPlayerIdWithBody(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchPlayerPlayerIdRequestWithBody(c.Server, playerId, contentType, body)
+func (c *Client) PatchPlayersPlayerIdWithBody(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchPlayersPlayerIdRequestWithBody(c.Server, playerId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +168,8 @@ func (c *Client) PatchPlayerPlayerIdWithBody(ctx context.Context, playerId opena
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchPlayerPlayerId(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchPlayerPlayerIdRequest(c.Server, playerId, body)
+func (c *Client) PatchPlayersPlayerId(ctx context.Context, playerId string, body models.PatchPlayersPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchPlayersPlayerIdRequest(c.Server, playerId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +204,18 @@ func (c *Client) PostStoryElements(ctx context.Context, body models.PostStoryEle
 	return c.Client.Do(req)
 }
 
+func (c *Client) DeleteStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteStoryElementsNodeIdRequest(c.Server, nodeId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetStoryElementsNodeId(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetStoryElementsNodeIdRequest(c.Server, nodeId)
 	if err != nil {
@@ -214,8 +228,8 @@ func (c *Client) GetStoryElementsNodeId(ctx context.Context, nodeId string, reqE
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutStoryElementsNodeIdRequestWithBody(c.Server, nodeId, contentType, body)
+func (c *Client) PatchStoryElementsNodeIdWithBody(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchStoryElementsNodeIdRequestWithBody(c.Server, nodeId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -226,8 +240,8 @@ func (c *Client) PutStoryElementsNodeIdWithBody(ctx context.Context, nodeId stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutStoryElementsNodeId(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutStoryElementsNodeIdRequest(c.Server, nodeId, body)
+func (c *Client) PatchStoryElementsNodeId(ctx context.Context, nodeId string, body models.PatchStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchStoryElementsNodeIdRequest(c.Server, nodeId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -238,19 +252,19 @@ func (c *Client) PutStoryElementsNodeId(ctx context.Context, nodeId string, body
 	return c.Client.Do(req)
 }
 
-// NewPostPlayerRequest calls the generic PostPlayer builder with application/json body
-func NewPostPlayerRequest(server string, body models.PostPlayerJSONRequestBody) (*http.Request, error) {
+// NewPostPlayersRequest calls the generic PostPlayers builder with application/json body
+func NewPostPlayersRequest(server string, body models.PostPlayersJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostPlayerRequestWithBody(server, "application/json", bodyReader)
+	return NewPostPlayersRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostPlayerRequestWithBody generates requests for PostPlayer with any type of body
-func NewPostPlayerRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostPlayersRequestWithBody generates requests for PostPlayers with any type of body
+func NewPostPlayersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -258,7 +272,7 @@ func NewPostPlayerRequestWithBody(server string, contentType string, body io.Rea
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/player")
+	operationPath := fmt.Sprintf("/players")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -278,8 +292,8 @@ func NewPostPlayerRequestWithBody(server string, contentType string, body io.Rea
 	return req, nil
 }
 
-// NewGetPlayerPlayerIdRequest generates requests for GetPlayerPlayerId
-func NewGetPlayerPlayerIdRequest(server string, playerId openapi_types.UUID) (*http.Request, error) {
+// NewGetPlayersPlayerIdRequest generates requests for GetPlayersPlayerId
+func NewGetPlayersPlayerIdRequest(server string, playerId string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -294,7 +308,7 @@ func NewGetPlayerPlayerIdRequest(server string, playerId openapi_types.UUID) (*h
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/player/%s", pathParam0)
+	operationPath := fmt.Sprintf("/players/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -312,19 +326,19 @@ func NewGetPlayerPlayerIdRequest(server string, playerId openapi_types.UUID) (*h
 	return req, nil
 }
 
-// NewPatchPlayerPlayerIdRequest calls the generic PatchPlayerPlayerId builder with application/json body
-func NewPatchPlayerPlayerIdRequest(server string, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody) (*http.Request, error) {
+// NewPatchPlayersPlayerIdRequest calls the generic PatchPlayersPlayerId builder with application/json body
+func NewPatchPlayersPlayerIdRequest(server string, playerId string, body models.PatchPlayersPlayerIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchPlayerPlayerIdRequestWithBody(server, playerId, "application/json", bodyReader)
+	return NewPatchPlayersPlayerIdRequestWithBody(server, playerId, "application/json", bodyReader)
 }
 
-// NewPatchPlayerPlayerIdRequestWithBody generates requests for PatchPlayerPlayerId with any type of body
-func NewPatchPlayerPlayerIdRequestWithBody(server string, playerId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchPlayersPlayerIdRequestWithBody generates requests for PatchPlayersPlayerId with any type of body
+func NewPatchPlayersPlayerIdRequestWithBody(server string, playerId string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -339,7 +353,7 @@ func NewPatchPlayerPlayerIdRequestWithBody(server string, playerId openapi_types
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/player/%s", pathParam0)
+	operationPath := fmt.Sprintf("/players/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -399,6 +413,40 @@ func NewPostStoryElementsRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
+// NewDeleteStoryElementsNodeIdRequest generates requests for DeleteStoryElementsNodeId
+func NewDeleteStoryElementsNodeIdRequest(server string, nodeId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "nodeId", runtime.ParamLocationPath, nodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/storyElements/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetStoryElementsNodeIdRequest generates requests for GetStoryElementsNodeId
 func NewGetStoryElementsNodeIdRequest(server string, nodeId string) (*http.Request, error) {
 	var err error
@@ -433,19 +481,19 @@ func NewGetStoryElementsNodeIdRequest(server string, nodeId string) (*http.Reque
 	return req, nil
 }
 
-// NewPutStoryElementsNodeIdRequest calls the generic PutStoryElementsNodeId builder with application/json body
-func NewPutStoryElementsNodeIdRequest(server string, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody) (*http.Request, error) {
+// NewPatchStoryElementsNodeIdRequest calls the generic PatchStoryElementsNodeId builder with application/json body
+func NewPatchStoryElementsNodeIdRequest(server string, nodeId string, body models.PatchStoryElementsNodeIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutStoryElementsNodeIdRequestWithBody(server, nodeId, "application/json", bodyReader)
+	return NewPatchStoryElementsNodeIdRequestWithBody(server, nodeId, "application/json", bodyReader)
 }
 
-// NewPutStoryElementsNodeIdRequestWithBody generates requests for PutStoryElementsNodeId with any type of body
-func NewPutStoryElementsNodeIdRequestWithBody(server string, nodeId string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchStoryElementsNodeIdRequestWithBody generates requests for PatchStoryElementsNodeId with any type of body
+func NewPatchStoryElementsNodeIdRequestWithBody(server string, nodeId string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -470,7 +518,7 @@ func NewPutStoryElementsNodeIdRequestWithBody(server string, nodeId string, cont
 		return nil, err
 	}
 
-	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -523,41 +571,44 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// PostPlayerWithBodyWithResponse request with any body
-	PostPlayerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error)
+	// PostPlayersWithBodyWithResponse request with any body
+	PostPlayersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayersResponse, error)
 
-	PostPlayerWithResponse(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error)
+	PostPlayersWithResponse(ctx context.Context, body models.PostPlayersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPlayersResponse, error)
 
-	// GetPlayerPlayerIdWithResponse request
-	GetPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetPlayerPlayerIdResponse, error)
+	// GetPlayersPlayerIdWithResponse request
+	GetPlayersPlayerIdWithResponse(ctx context.Context, playerId string, reqEditors ...RequestEditorFn) (*GetPlayersPlayerIdResponse, error)
 
-	// PatchPlayerPlayerIdWithBodyWithResponse request with any body
-	PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
+	// PatchPlayersPlayerIdWithBodyWithResponse request with any body
+	PatchPlayersPlayerIdWithBodyWithResponse(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayersPlayerIdResponse, error)
 
-	PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error)
+	PatchPlayersPlayerIdWithResponse(ctx context.Context, playerId string, body models.PatchPlayersPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayersPlayerIdResponse, error)
 
 	// PostStoryElementsWithBodyWithResponse request with any body
 	PostStoryElementsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStoryElementsResponse, error)
 
 	PostStoryElementsWithResponse(ctx context.Context, body models.PostStoryElementsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStoryElementsResponse, error)
 
+	// DeleteStoryElementsNodeIdWithResponse request
+	DeleteStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*DeleteStoryElementsNodeIdResponse, error)
+
 	// GetStoryElementsNodeIdWithResponse request
 	GetStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*GetStoryElementsNodeIdResponse, error)
 
-	// PutStoryElementsNodeIdWithBodyWithResponse request with any body
-	PutStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error)
+	// PatchStoryElementsNodeIdWithBodyWithResponse request with any body
+	PatchStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchStoryElementsNodeIdResponse, error)
 
-	PutStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error)
+	PatchStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, body models.PatchStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchStoryElementsNodeIdResponse, error)
 }
 
-type PostPlayerResponse struct {
+type PostPlayersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *models.Player
 }
 
 // Status returns HTTPResponse.Status
-func (r PostPlayerResponse) Status() string {
+func (r PostPlayersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -565,21 +616,21 @@ func (r PostPlayerResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostPlayerResponse) StatusCode() int {
+func (r PostPlayersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetPlayerPlayerIdResponse struct {
+type GetPlayersPlayerIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *models.Player
 }
 
 // Status returns HTTPResponse.Status
-func (r GetPlayerPlayerIdResponse) Status() string {
+func (r GetPlayersPlayerIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -587,21 +638,21 @@ func (r GetPlayerPlayerIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetPlayerPlayerIdResponse) StatusCode() int {
+func (r GetPlayersPlayerIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PatchPlayerPlayerIdResponse struct {
+type PatchPlayersPlayerIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *models.Player
 }
 
 // Status returns HTTPResponse.Status
-func (r PatchPlayerPlayerIdResponse) Status() string {
+func (r PatchPlayersPlayerIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -609,7 +660,7 @@ func (r PatchPlayerPlayerIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PatchPlayerPlayerIdResponse) StatusCode() int {
+func (r PatchPlayersPlayerIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -638,6 +689,27 @@ func (r PostStoryElementsResponse) StatusCode() int {
 	return 0
 }
 
+type DeleteStoryElementsNodeIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteStoryElementsNodeIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteStoryElementsNodeIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetStoryElementsNodeIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -660,14 +732,14 @@ func (r GetStoryElementsNodeIdResponse) StatusCode() int {
 	return 0
 }
 
-type PutStoryElementsNodeIdResponse struct {
+type PatchStoryElementsNodeIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *models.StoryElement
 }
 
 // Status returns HTTPResponse.Status
-func (r PutStoryElementsNodeIdResponse) Status() string {
+func (r PatchStoryElementsNodeIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -675,54 +747,54 @@ func (r PutStoryElementsNodeIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutStoryElementsNodeIdResponse) StatusCode() int {
+func (r PatchStoryElementsNodeIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// PostPlayerWithBodyWithResponse request with arbitrary body returning *PostPlayerResponse
-func (c *ClientWithResponses) PostPlayerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error) {
-	rsp, err := c.PostPlayerWithBody(ctx, contentType, body, reqEditors...)
+// PostPlayersWithBodyWithResponse request with arbitrary body returning *PostPlayersResponse
+func (c *ClientWithResponses) PostPlayersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPlayersResponse, error) {
+	rsp, err := c.PostPlayersWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPlayerResponse(rsp)
+	return ParsePostPlayersResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostPlayerWithResponse(ctx context.Context, body models.PostPlayerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPlayerResponse, error) {
-	rsp, err := c.PostPlayer(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostPlayersWithResponse(ctx context.Context, body models.PostPlayersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPlayersResponse, error) {
+	rsp, err := c.PostPlayers(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPlayerResponse(rsp)
+	return ParsePostPlayersResponse(rsp)
 }
 
-// GetPlayerPlayerIdWithResponse request returning *GetPlayerPlayerIdResponse
-func (c *ClientWithResponses) GetPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetPlayerPlayerIdResponse, error) {
-	rsp, err := c.GetPlayerPlayerId(ctx, playerId, reqEditors...)
+// GetPlayersPlayerIdWithResponse request returning *GetPlayersPlayerIdResponse
+func (c *ClientWithResponses) GetPlayersPlayerIdWithResponse(ctx context.Context, playerId string, reqEditors ...RequestEditorFn) (*GetPlayersPlayerIdResponse, error) {
+	rsp, err := c.GetPlayersPlayerId(ctx, playerId, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetPlayerPlayerIdResponse(rsp)
+	return ParseGetPlayersPlayerIdResponse(rsp)
 }
 
-// PatchPlayerPlayerIdWithBodyWithResponse request with arbitrary body returning *PatchPlayerPlayerIdResponse
-func (c *ClientWithResponses) PatchPlayerPlayerIdWithBodyWithResponse(ctx context.Context, playerId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
-	rsp, err := c.PatchPlayerPlayerIdWithBody(ctx, playerId, contentType, body, reqEditors...)
+// PatchPlayersPlayerIdWithBodyWithResponse request with arbitrary body returning *PatchPlayersPlayerIdResponse
+func (c *ClientWithResponses) PatchPlayersPlayerIdWithBodyWithResponse(ctx context.Context, playerId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPlayersPlayerIdResponse, error) {
+	rsp, err := c.PatchPlayersPlayerIdWithBody(ctx, playerId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchPlayerPlayerIdResponse(rsp)
+	return ParsePatchPlayersPlayerIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchPlayerPlayerIdWithResponse(ctx context.Context, playerId openapi_types.UUID, body models.PatchPlayerPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayerPlayerIdResponse, error) {
-	rsp, err := c.PatchPlayerPlayerId(ctx, playerId, body, reqEditors...)
+func (c *ClientWithResponses) PatchPlayersPlayerIdWithResponse(ctx context.Context, playerId string, body models.PatchPlayersPlayerIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPlayersPlayerIdResponse, error) {
+	rsp, err := c.PatchPlayersPlayerId(ctx, playerId, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchPlayerPlayerIdResponse(rsp)
+	return ParsePatchPlayersPlayerIdResponse(rsp)
 }
 
 // PostStoryElementsWithBodyWithResponse request with arbitrary body returning *PostStoryElementsResponse
@@ -742,6 +814,15 @@ func (c *ClientWithResponses) PostStoryElementsWithResponse(ctx context.Context,
 	return ParsePostStoryElementsResponse(rsp)
 }
 
+// DeleteStoryElementsNodeIdWithResponse request returning *DeleteStoryElementsNodeIdResponse
+func (c *ClientWithResponses) DeleteStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*DeleteStoryElementsNodeIdResponse, error) {
+	rsp, err := c.DeleteStoryElementsNodeId(ctx, nodeId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteStoryElementsNodeIdResponse(rsp)
+}
+
 // GetStoryElementsNodeIdWithResponse request returning *GetStoryElementsNodeIdResponse
 func (c *ClientWithResponses) GetStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, reqEditors ...RequestEditorFn) (*GetStoryElementsNodeIdResponse, error) {
 	rsp, err := c.GetStoryElementsNodeId(ctx, nodeId, reqEditors...)
@@ -751,32 +832,32 @@ func (c *ClientWithResponses) GetStoryElementsNodeIdWithResponse(ctx context.Con
 	return ParseGetStoryElementsNodeIdResponse(rsp)
 }
 
-// PutStoryElementsNodeIdWithBodyWithResponse request with arbitrary body returning *PutStoryElementsNodeIdResponse
-func (c *ClientWithResponses) PutStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error) {
-	rsp, err := c.PutStoryElementsNodeIdWithBody(ctx, nodeId, contentType, body, reqEditors...)
+// PatchStoryElementsNodeIdWithBodyWithResponse request with arbitrary body returning *PatchStoryElementsNodeIdResponse
+func (c *ClientWithResponses) PatchStoryElementsNodeIdWithBodyWithResponse(ctx context.Context, nodeId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchStoryElementsNodeIdResponse, error) {
+	rsp, err := c.PatchStoryElementsNodeIdWithBody(ctx, nodeId, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutStoryElementsNodeIdResponse(rsp)
+	return ParsePatchStoryElementsNodeIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, body models.PutStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutStoryElementsNodeIdResponse, error) {
-	rsp, err := c.PutStoryElementsNodeId(ctx, nodeId, body, reqEditors...)
+func (c *ClientWithResponses) PatchStoryElementsNodeIdWithResponse(ctx context.Context, nodeId string, body models.PatchStoryElementsNodeIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchStoryElementsNodeIdResponse, error) {
+	rsp, err := c.PatchStoryElementsNodeId(ctx, nodeId, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutStoryElementsNodeIdResponse(rsp)
+	return ParsePatchStoryElementsNodeIdResponse(rsp)
 }
 
-// ParsePostPlayerResponse parses an HTTP response from a PostPlayerWithResponse call
-func ParsePostPlayerResponse(rsp *http.Response) (*PostPlayerResponse, error) {
+// ParsePostPlayersResponse parses an HTTP response from a PostPlayersWithResponse call
+func ParsePostPlayersResponse(rsp *http.Response) (*PostPlayersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostPlayerResponse{
+	response := &PostPlayersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -794,15 +875,15 @@ func ParsePostPlayerResponse(rsp *http.Response) (*PostPlayerResponse, error) {
 	return response, nil
 }
 
-// ParseGetPlayerPlayerIdResponse parses an HTTP response from a GetPlayerPlayerIdWithResponse call
-func ParseGetPlayerPlayerIdResponse(rsp *http.Response) (*GetPlayerPlayerIdResponse, error) {
+// ParseGetPlayersPlayerIdResponse parses an HTTP response from a GetPlayersPlayerIdWithResponse call
+func ParseGetPlayersPlayerIdResponse(rsp *http.Response) (*GetPlayersPlayerIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetPlayerPlayerIdResponse{
+	response := &GetPlayersPlayerIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -820,15 +901,15 @@ func ParseGetPlayerPlayerIdResponse(rsp *http.Response) (*GetPlayerPlayerIdRespo
 	return response, nil
 }
 
-// ParsePatchPlayerPlayerIdResponse parses an HTTP response from a PatchPlayerPlayerIdWithResponse call
-func ParsePatchPlayerPlayerIdResponse(rsp *http.Response) (*PatchPlayerPlayerIdResponse, error) {
+// ParsePatchPlayersPlayerIdResponse parses an HTTP response from a PatchPlayersPlayerIdWithResponse call
+func ParsePatchPlayersPlayerIdResponse(rsp *http.Response) (*PatchPlayersPlayerIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchPlayerPlayerIdResponse{
+	response := &PatchPlayersPlayerIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -872,6 +953,22 @@ func ParsePostStoryElementsResponse(rsp *http.Response) (*PostStoryElementsRespo
 	return response, nil
 }
 
+// ParseDeleteStoryElementsNodeIdResponse parses an HTTP response from a DeleteStoryElementsNodeIdWithResponse call
+func ParseDeleteStoryElementsNodeIdResponse(rsp *http.Response) (*DeleteStoryElementsNodeIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteStoryElementsNodeIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
 // ParseGetStoryElementsNodeIdResponse parses an HTTP response from a GetStoryElementsNodeIdWithResponse call
 func ParseGetStoryElementsNodeIdResponse(rsp *http.Response) (*GetStoryElementsNodeIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -898,15 +995,15 @@ func ParseGetStoryElementsNodeIdResponse(rsp *http.Response) (*GetStoryElementsN
 	return response, nil
 }
 
-// ParsePutStoryElementsNodeIdResponse parses an HTTP response from a PutStoryElementsNodeIdWithResponse call
-func ParsePutStoryElementsNodeIdResponse(rsp *http.Response) (*PutStoryElementsNodeIdResponse, error) {
+// ParsePatchStoryElementsNodeIdResponse parses an HTTP response from a PatchStoryElementsNodeIdWithResponse call
+func ParsePatchStoryElementsNodeIdResponse(rsp *http.Response) (*PatchStoryElementsNodeIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutStoryElementsNodeIdResponse{
+	response := &PatchStoryElementsNodeIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -63,7 +63,7 @@ func main() {
 	})
 	e.PATCH("/player/:wixID", func(c echo.Context) error {
 		wixID := c.Param("wixID")
-		playerState := new(models.PatchPlayerPlayerIdJSONRequestBody)
+		playerState := new(models.PatchPlayersPlayerIdJSONRequestBody)
 		if err := c.Bind(playerState); err != nil {
 			return err
 		}
@@ -74,6 +74,9 @@ func main() {
 	e.POST("/storyElements", storyHandler.CreateStoryElement)
 	e.GET("/storyElements/:nodeId", func(c echo.Context) error {
 		return storyHandler.GetStoryElement(c, c.Param("nodeId"))
+	})
+	e.DELETE("/storyElements/:nodeId", func(c echo.Context) error {
+		return storyHandler.DeleteStoryElement(c, c.Param("nodeId"))
 	})
 	e.PUT("/storyElements/:nodeId", func(c echo.Context) error {
 		storyElement := new(models.StoryElement)

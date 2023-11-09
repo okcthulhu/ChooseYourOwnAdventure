@@ -3,14 +3,15 @@ info:
   version: "1.0.0"
   title: "Choose Your Own Adventure API"
   description: "An API for a Choose Your Own Adventure game."
-
 servers:
-  - url: "https://api.yourwebsite.com"
-
+  - url: "https://{hostname}"
+    variables:
+      hostname:
+        default: "34.170.108.146"
 paths:
-  /player:
+  /players:
     post:
-      summary: "Create a new player state."
+      summary: "Create a new player."
       requestBody:
         required: true
         content:
@@ -19,22 +20,36 @@ paths:
               $ref: '#/components/schemas/Player'
       responses:
         "201":
-          description: "Player state created successfully."
+          description: "Player created successfully."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Player'
 
-  /player/{playerId}:
-    patch:
-      summary: "Update a player's state by ID."
+  /players/{playerId}:
+    get:
+      summary: "Retrieve a player's state by their ID."
       parameters:
         - name: "playerId"
           in: "path"
           required: true
           schema:
             type: "string"
-            format: "uuid"
+      responses:
+        "200":
+          description: "Player's state retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+    patch:
+      summary: "Update a player's state by their ID."
+      parameters:
+        - name: "playerId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         required: true
         content:
@@ -43,23 +58,7 @@ paths:
               $ref: '#/components/schemas/Player'
       responses:
         "200":
-          description: "Player state updated."
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Player'
-    get:
-      summary: "Retrieve a player's state."
-      parameters:
-        - name: "playerId"
-          in: "path"
-          required: true
-          schema:
-            type: "string"
-            format: "uuid"
-      responses:
-        "200":
-          description: "Player state retrieved."
+          description: "Player's state updated successfully."
           content:
             application/json:
               schema:
@@ -84,7 +83,7 @@ paths:
 
   /storyElements/{nodeId}:
     get:
-      summary: "Retrieve a story node."
+      summary: "Retrieve a story element by its node ID."
       parameters:
         - name: "nodeId"
           in: "path"
@@ -93,13 +92,13 @@ paths:
             type: "string"
       responses:
         "200":
-          description: "Story node retrieved."
+          description: "Story element retrieved successfully."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/StoryElement'
-    put:
-      summary: "Update a story node by its ID."
+    patch:
+      summary: "Update a part of a story element by its node ID."
       parameters:
         - name: "nodeId"
           in: "path"
@@ -114,11 +113,22 @@ paths:
               $ref: '#/components/schemas/StoryElement'
       responses:
         "200":
-          description: "Story element updated."
+          description: "Story element updated successfully."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/StoryElement'
+    delete:
+      summary: "Delete a story element by its node ID."
+      parameters:
+        - name: "nodeId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "Story element deleted successfully."
 
 components:
   schemas:
@@ -127,74 +137,109 @@ components:
       properties:
         storyID:
           type: "string"
-        currentChapter:
+          description: "Unique identifier for the story."
+        currentStoryNodeID:
           type: "string"
-        currentPart:
-          type: "string"
+          description: "Identifier of the current position in the story."
         wisdoms:
           type: "array"
           items:
-            type: "string"
-        artifacts:
-          type: "array"
-          items:
-            type: "string"
+            $ref: '#/components/schemas/Wisdom'
+          description: "Mapping of wisdom IDs to their descriptions."
+      required:
+        - storyID
+        - currentStoryNodeID
 
     Player:
       type: "object"
       properties:
         _id:
           type: "string"
+          description: "The player's unique identifier."
         wixID:
           type: "string"
           format: "uuid"
-        username:
-          type: "string"
+          description: "Unique Wix identifier for the player."
         email:
           type: "string"
+          format: "email"
+          description: "Player's email address."
         storyStates:
           type: "array"
           items:
             $ref: '#/components/schemas/StoryState'
+      required:
+        - wixID
+        - email
 
     StoryElement:
       type: "object"
       properties:
         _id:
-          type: "string"  # Updated from object, assuming you'll be interacting with it as a hex string
+          type: "string"
+          description: "Unique identifier for the story element."
         storyID:
           type: "string"
+          description: "Identifier for the story this element belongs to."
         nodeID:
           type: "string"
-        chapter:
-          type: "object"
-          properties:
-            name:
-              type: "string"
-            artURL:
-              type: "string"
-            videoURL:
-              type: "string"
-        part:
-          type: "object"
-          properties:
-            name:
-              type: "string"
-            artURL:
-              type: "string"
-            videoURL:
-              type: "string"
+          description: "Node identifier for this story element."
+        chapterName:
+          type: "string"
+          description: "Name of the chapter this element is part of."
+        artURL:
+          type: "string"
+          description: "URL to the chapter art."
+        videoURL:
+          type: "string"
+          description: "URL to the chapter video."
         content:
           type: "string"
-        options:
+          description: "Content of the story element."
+        choices:
           type: "array"
           items:
-            type: "object"
+            $ref: '#/components/schemas/Choice'
         wisdoms:
-          type: "array"
-          items:
-            type: "object"
-        artifacts:
-          type: "array"
-          items:
-            type: "object"
+          type: "object"
+          additionalProperties: 
+            $ref: '#/components/schemas/Wisdom'
+      required:
+        - storyID
+        - nodeID
+        - content
+
+    Choice:
+      type: "object"
+      properties:
+        description:
+          type: "string"
+          description: "Description of the choice."
+        nextNodeID:
+          type: "string"
+          description: "Node identifier for the subsequent story element."
+        wisdomID:
+          type: "string"
+          description: "Optional wisdom identifier required for the choice."
+        imageUrl:
+          type: "string"
+          description: "Optional URL to an image for the choice."
+      required:
+        - description
+        - nextNodeID
+
+    Wisdom:
+      type: "object"
+      properties:
+        wisdomID:
+          type: "string"
+          description: "Unique identifier for the wisdom."
+        name:
+          type: "string"
+          description: "Name of the wisdom."
+        description:
+          type: "string"
+          description: "Description of the wisdom."
+      required:
+        - wisdomID
+        - name

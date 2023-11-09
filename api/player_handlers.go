@@ -58,7 +58,7 @@ func NewPlayerHandler(playerCol PlayerCollection) *PlayerHandler {
 // After successful creation, the function returns a JSON-formatted response containing the newly created player state.
 // If the operation fails, an appropriate HTTP status code is returned, along with an error message.
 func (h *PlayerHandler) CreatePlayerState(c echo.Context) error {
-	playerState := new(models.PostPlayerJSONRequestBody)
+	playerState := new(models.PostPlayersJSONRequestBody)
 	if err := c.Bind(playerState); err != nil {
 		return c.JSON(http.StatusBadRequest, "Failed to bind the request to the player")
 	}
@@ -111,7 +111,7 @@ func (h *PlayerHandler) GetPlayerStateByWixID(c echo.Context, wixID string) erro
 // Upon successful update, the function returns a JSON-formatted response reflecting the modified player state.
 // If the update operation fails or if the specified Wix ID does not exist,
 // an appropriate HTTP status code and an error message are returned.
-func (h *PlayerHandler) UpdatePlayerState(c echo.Context, wixID string, playerState models.PatchPlayerPlayerIdJSONRequestBody) error {
+func (h *PlayerHandler) UpdatePlayerState(c echo.Context, wixID string, playerUpdate models.PatchPlayersPlayerIdJSONRequestBody) error {
 	parsedUUID, err := uuid.Parse(wixID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
@@ -122,12 +122,96 @@ func (h *PlayerHandler) UpdatePlayerState(c echo.Context, wixID string, playerSt
 		Data:    parsedUUID[:],
 	}
 
-	filter := bson.M{"wixID": binaryUUID}
-	update := bson.M{"$set": playerState}
-	_, err = h.PlayerCol.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		return c.JSON(http.StatusNotFound, "Player not found or update failed")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if playerUpdate.StoryStates == nil {
+		return c.JSON(http.StatusBadRequest, "No story states provided")
 	}
 
-	return c.JSON(http.StatusOK, "Player updated successfully")
+	// Loop through the story states provided in the update.
+	for _, storyState := range *playerUpdate.StoryStates {
+		// Check if the wisdoms array is provided for the story state.
+		if storyState.Wisdoms == nil {
+			continue // No wisdoms to update for this story state.
+		}
+
+		for _, wisdomToUpdate := range *storyState.Wisdoms {
+			// Define the filter to find the player with the given WixID and storyID.
+			filter := bson.M{
+				"wixID": binaryUUID,
+				"storyStates": bson.M{
+					"$elemMatch": bson.M{
+						"storyID": storyState.StoryID,
+					},
+				},
+			}
+
+			// Attempt to update an existing wisdom within the story state.
+			update := bson.M{
+				"$set": bson.M{
+					"storyStates.$[story].wisdoms.$[wis].description": wisdomToUpdate.Description,
+					"storyStates.$[story].wisdoms.$[wis].artURL":      wisdomToUpdate.ArtURL,
+					// Include other fields of wisdom as necessary.
+				},
+			}
+
+			arrayFilters := options.ArrayFilters{
+				Filters: []interface{}{
+					bson.M{"story.storyID": storyState.StoryID},
+					bson.M{"wis.wisdomID": wisdomToUpdate.WisdomID},
+				},
+			}
+			updateOptions := options.Update().SetArrayFilters(arrayFilters)
+
+			// Execute the update.
+			result, err := h.PlayerCol.UpdateOne(ctx, filter, update, updateOptions)
+			if err != nil {
+				log.Println("Failed to update wisdom in player state:", err)
+				return c.JSON(http.StatusInternalServerError, "Internal server error during wisdom update")
+			}
+
+			// If the wisdom doesn't exist (matched count is 0), add it to the wisdoms array.
+			if result.MatchedCount == 0 || result.ModifiedCount == 0 {
+				pushUpdate := bson.M{
+					"$push": bson.M{
+						"storyStates.$.wisdoms": wisdomToUpdate,
+					},
+				}
+
+				// Execute the push update.
+				_, err = h.PlayerCol.UpdateOne(ctx, filter, pushUpdate)
+				if err != nil {
+					log.Println("Failed to add new wisdom to player state:", err)
+					return c.JSON(http.StatusInternalServerError, "Internal server error during wisdom addition")
+				}
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, "Player state updated successfully")
 }
+
+// func (h *PlayerHandler) UpdatePlayerState(c echo.Context, wixID string, playerUpdate models.PatchPlayersPlayerIdJSONRequestBody) error {
+// 	parsedUUID, err := uuid.Parse(wixID)
+// 	if err != nil {
+// 		return c.JSON(http.StatusBadRequest, "Invalid WixID format")
+// 	}
+
+// 	binaryUUID := primitive.Binary{
+// 		Subtype: 0x04,
+// 		Data:    parsedUUID[:],
+// 	}
+
+// 	// Here we assume that playerUpdate contains a field like NewWisdom, which needs to be appended.
+// 	filter := bson.M{"wixID": binaryUUID}
+// 	update := bson.M{"$push": bson.M{"storyStates.$.wisdoms": playerUpdate.NewWisdom}}
+
+// 	_, err = h.PlayerCol.UpdateOne(context.Background(), filter, update)
+// 	if err != nil {
+// 		log.Println("Failed to update player state:", err)
+// 		return c.JSON(http.StatusNotFound, "Player not found or update failed")
+// 	}
+
+// 	return c.JSON(http.StatusOK, "Player updated successfully with new wisdom")
+// }

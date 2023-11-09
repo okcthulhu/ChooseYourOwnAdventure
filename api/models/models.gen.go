@@ -7,54 +7,101 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Choice defines model for Choice.
+type Choice struct {
+	// Description Description of the choice.
+	Description string `json:"description" bson:"description"`
+
+	// ImageUrl Optional URL to an image for the choice.
+	ImageUrl *string `json:"imageUrl,omitempty" bson:"imageUrl,omitempty"`
+
+	// NextNodeID Node identifier for the subsequent story element.
+	NextNodeID string `json:"nextNodeID" bson:"nextNodeID"`
+
+	// WisdomID Optional wisdom identifier required for the choice.
+	WisdomID *string `json:"wisdomID,omitempty" bson:"wisdomID,omitempty"`
+}
+
 // Player defines model for Player.
 type Player struct {
-	Id          *string             `json:"_id,omitempty" bson:"_id,omitempty"`
-	Email       *string             `json:"email,omitempty" bson:"email,omitempty"`
-	StoryStates *[]StoryState       `json:"storyStates,omitempty" bson:"storyStates,omitempty"`
-	Username    *string             `json:"username,omitempty" bson:"username,omitempty"`
-	WixID       *openapi_types.UUID `json:"wixID,omitempty" bson:"wixID,omitempty"`
+	// Id The player's unique identifier.
+	Id *string `json:"_id,omitempty" bson:"_id,omitempty"`
+
+	// Email Player's email address.
+	Email openapi_types.Email `json:"email" bson:"email"`
+
+	// StoryStates Player's story states.
+	StoryStates *[]StoryState `json:"storyStates,omitempty" bson:"storyStates,omitempty"`
+
+	// WixID Unique Wix identifier for the player.
+	WixID openapi_types.UUID `json:"wixID" bson:"wixID"`
 }
 
 // StoryElement defines model for StoryElement.
 type StoryElement struct {
-	Id        *string                   `json:"_id,omitempty" bson:"_id,omitempty"`
-	Artifacts *[]map[string]interface{} `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
-	Chapter   *struct {
-		ArtURL   *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
-		Name     *string `json:"name,omitempty" bson:"name,omitempty"`
-		VideoURL *string `json:"videoURL,omitempty" bson:"videoURL,omitempty"`
-	} `json:"chapter,omitempty" bson:"chapter,omitempty"`
-	Content *string                   `json:"content,omitempty" bson:"content,omitempty"`
-	NodeID  *string                   `json:"nodeID,omitempty" bson:"nodeID,omitempty"`
-	Options *[]map[string]interface{} `json:"options,omitempty" bson:"options,omitempty"`
-	Part    *struct {
-		ArtURL   *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
-		Name     *string `json:"name,omitempty" bson:"name,omitempty"`
-		VideoURL *string `json:"videoURL,omitempty" bson:"videoURL,omitempty"`
-	} `json:"part,omitempty" bson:"part,omitempty"`
-	StoryID *string                   `json:"storyID,omitempty" bson:"storyID,omitempty"`
-	Wisdoms *[]map[string]interface{} `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
+	// Id Unique identifier for the story element.
+	Id *string `json:"_id,omitempty" bson:"_id,omitempty"`
+
+	// ArtURL URL to the chapter art.
+	ArtURL *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
+
+	// ChapterName Name of the chapter this element is part of.
+	ChapterName *string `json:"chapterName,omitempty" bson:"chapterName,omitempty"`
+
+	// Choices Choices available in this story element.
+	Choices *[]Choice `json:"choices,omitempty" bson:"choices,omitempty"`
+
+	// Content Content of the story element.
+	Content string `json:"content" bson:"content"`
+
+	// NodeID Node identifier for this story element.
+	NodeID string `json:"nodeID" bson:"nodeID"`
+
+	// StoryID Identifier for the story this element belongs to.
+	StoryID string `json:"storyID" bson:"storyID"`
+
+	// VideoURL URL to the chapter video.
+	VideoURL *string `json:"videoURL,omitempty" bson:"videoURL,omitempty"`
+
+	// Wisdoms Wisdoms associated with this story element.
+	Wisdoms *map[string]Wisdom `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
 }
 
 // StoryState defines model for StoryState.
 type StoryState struct {
-	Artifacts      *[]string `json:"artifacts,omitempty" bson:"artifacts,omitempty"`
-	CurrentChapter *string   `json:"currentChapter,omitempty" bson:"currentChapter,omitempty"`
-	CurrentPart    *string   `json:"currentPart,omitempty" bson:"currentPart,omitempty"`
-	StoryID        *string   `json:"storyID,omitempty" bson:"storyID,omitempty"`
-	Wisdoms        *[]string `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
+	// CurrentStoryNodeID Identifier of the current position in the story.
+	CurrentStoryNodeID string `json:"currentStoryNodeID" bson:"currentStoryNodeID"`
+
+	// StoryID Unique identifier for the story.
+	StoryID string `json:"storyID" bson:"storyID"`
+
+	// Wisdoms Mapping of wisdom IDs to their descriptions.
+	Wisdoms *[]Wisdom `json:"wisdoms,omitempty" bson:"wisdoms,omitempty"`
 }
 
+// Wisdom defines model for Wisdom.
+type Wisdom struct {
+	// Description Description of the wisdom.
+	Description *string `json:"description,omitempty" bson:"description,omitempty"`
 
-// PostPlayerJSONRequestBody defines body for PostPlayer for application/json ContentType.
-type PostPlayerJSONRequestBody = Player
+	// Name Name of the wisdom.
+	Name string `json:"name" bson:"name"`
 
-// PatchPlayerPlayerIdJSONRequestBody defines body for PatchPlayerPlayerId for application/json ContentType.
-type PatchPlayerPlayerIdJSONRequestBody = Player
+	// ArtURL URL to the wisdom art.
+	ArtURL *string `json:"artURL,omitempty" bson:"artURL,omitempty"`
+
+	// WisdomID Unique identifier for the wisdom.
+	WisdomID string `json:"wisdomID" bson:"wisdomID"`
+}
+
+// PostPlayersJSONRequestBody defines body for PostPlayers for application/json ContentType.
+type PostPlayersJSONRequestBody = Player
+
+// PatchPlayersPlayerIdJSONRequestBody defines body for PatchPlayersPlayerId for application/json ContentType.
+type PatchPlayersPlayerIdJSONRequestBody = Player
 
 // PostStoryElementsJSONRequestBody defines body for PostStoryElements for application/json ContentType.
 type PostStoryElementsJSONRequestBody = StoryElement
 
-// PutStoryElementsNodeIdJSONRequestBody defines body for PutStoryElementsNodeId for application/json ContentType.
-type PutStoryElementsNodeIdJSONRequestBody = StoryElement
+// PatchStoryElementsNodeIdJSONRequestBody defines body for PatchStoryElementsNodeId for application/json ContentType.
+type PatchStoryElementsNodeIdJSONRequestBody = StoryElement

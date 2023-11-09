@@ -12,9 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// StoryCollection behaves similarly to PlayerCollection but is intended
-// for story elements. This separation makes the system more modular and adheres
-// to the Single Responsibility and Interface Segregation Principles.
+// StoryCollection defines the required behavior for interacting with
+// the story element-related data in MongoDB. By isolating these methods, we can
+// easily swap out the actual MongoDB collection with a mock for testing.
 type StoryCollection interface {
 	// InsertOne adds a new document to the story elements collection. The method returns
 	// the result of the insertion, which contains the ID of the new document, or an error.
@@ -25,6 +25,8 @@ type StoryCollection interface {
 	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
 	UpdateOne(ctx context.Context, filter interface{}, update interface{},
 		opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	DeleteOne(ctx context.Context, filter interface{},
+		opts ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 }
 
 // StoryHandler is the main orchestrator for the application's HTTP API. It aggregates
@@ -96,7 +98,7 @@ func (h *StoryHandler) GetStoryElement(c echo.Context, nodeId string) error {
 // Upon successful update, the function returns a JSON-formatted response reflecting the modified story element.
 // If the update operation fails or if the specified NodeId does not exist,
 // an appropriate HTTP status code and an error message are returned.
-func (h *StoryHandler) UpdateStoryElement(c echo.Context, nodeId string, storyElement models.PutStoryElementsNodeIdJSONRequestBody) error {
+func (h *StoryHandler) UpdateStoryElement(c echo.Context, nodeId string, storyElement models.PatchStoryElementsNodeIdJSONRequestBody) error {
 	filter := bson.M{"nodeID": nodeId}
 	update := bson.M{"$set": storyElement}
 	_, err := h.StoryCol.UpdateOne(context.Background(), filter, update)
@@ -105,4 +107,22 @@ func (h *StoryHandler) UpdateStoryElement(c echo.Context, nodeId string, storyEl
 	}
 
 	return c.JSON(http.StatusOK, "Story element updated successfully")
+}
+
+// DeleteStoryElement removes a story element identified by its node ID from the database.
+// It receives an Echo context and the node ID of the story element as parameters.
+// The function constructs a filter based on the node ID and attempts to delete the
+// corresponding document from the story collection in MongoDB.
+// It returns an HTTP status code and a JSON response indicating the outcome of the operation.
+// If the deletion is successful, it responds with an HTTP 200 OK status and a success message.
+// If an error occurs during the deletion process, it responds with an HTTP 500 Internal Server Error
+// status and an error message describing the failure.
+func (h *StoryHandler) DeleteStoryElement(c echo.Context, nodeId string) error {
+	filter := bson.M{"nodeID": nodeId}
+	_, err := h.StoryCol.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Delete failed due to an internal error")
+	}
+
+	return c.JSON(http.StatusOK, "Story element deleted successfully")
 }

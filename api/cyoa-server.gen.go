@@ -16,29 +16,31 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Create a new player state.
-	// (POST /player)
-	PostPlayer(ctx echo.Context) error
-	// Retrieve a player's state.
-	// (GET /player/{playerId})
-	GetPlayerPlayerId(ctx echo.Context, playerId openapi_types.UUID) error
-	// Update a player's state by ID.
-	// (PATCH /player/{playerId})
-	PatchPlayerPlayerId(ctx echo.Context, playerId openapi_types.UUID) error
+	// Create a new player.
+	// (POST /players)
+	PostPlayers(ctx echo.Context) error
+	// Retrieve a player's state by their ID.
+	// (GET /players/{playerId})
+	GetPlayersPlayerId(ctx echo.Context, playerId string) error
+	// Update a player's state by their ID.
+	// (PATCH /players/{playerId})
+	PatchPlayersPlayerId(ctx echo.Context, playerId string) error
 	// Create a new story element.
 	// (POST /storyElements)
 	PostStoryElements(ctx echo.Context) error
-	// Retrieve a story node.
+	// Delete a story element by its node ID.
+	// (DELETE /storyElements/{nodeId})
+	DeleteStoryElementsNodeId(ctx echo.Context, nodeId string) error
+	// Retrieve a story element by its node ID.
 	// (GET /storyElements/{nodeId})
 	GetStoryElementsNodeId(ctx echo.Context, nodeId string) error
-	// Update a story node by its ID.
-	// (PUT /storyElements/{nodeId})
-	PutStoryElementsNodeId(ctx echo.Context, nodeId string) error
+	// Update a part of a story element by its node ID.
+	// (PATCH /storyElements/{nodeId})
+	PatchStoryElementsNodeId(ctx echo.Context, nodeId string) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -46,20 +48,20 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// PostPlayer converts echo context to params.
-func (w *ServerInterfaceWrapper) PostPlayer(ctx echo.Context) error {
+// PostPlayers converts echo context to params.
+func (w *ServerInterfaceWrapper) PostPlayers(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PostPlayer(ctx)
+	err = w.Handler.PostPlayers(ctx)
 	return err
 }
 
-// GetPlayerPlayerId converts echo context to params.
-func (w *ServerInterfaceWrapper) GetPlayerPlayerId(ctx echo.Context) error {
+// GetPlayersPlayerId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetPlayersPlayerId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "playerId" -------------
-	var playerId openapi_types.UUID
+	var playerId string
 
 	err = runtime.BindStyledParameterWithLocation("simple", false, "playerId", runtime.ParamLocationPath, ctx.Param("playerId"), &playerId)
 	if err != nil {
@@ -67,15 +69,15 @@ func (w *ServerInterfaceWrapper) GetPlayerPlayerId(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.GetPlayerPlayerId(ctx, playerId)
+	err = w.Handler.GetPlayersPlayerId(ctx, playerId)
 	return err
 }
 
-// PatchPlayerPlayerId converts echo context to params.
-func (w *ServerInterfaceWrapper) PatchPlayerPlayerId(ctx echo.Context) error {
+// PatchPlayersPlayerId converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchPlayersPlayerId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "playerId" -------------
-	var playerId openapi_types.UUID
+	var playerId string
 
 	err = runtime.BindStyledParameterWithLocation("simple", false, "playerId", runtime.ParamLocationPath, ctx.Param("playerId"), &playerId)
 	if err != nil {
@@ -83,7 +85,7 @@ func (w *ServerInterfaceWrapper) PatchPlayerPlayerId(ctx echo.Context) error {
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PatchPlayerPlayerId(ctx, playerId)
+	err = w.Handler.PatchPlayersPlayerId(ctx, playerId)
 	return err
 }
 
@@ -93,6 +95,22 @@ func (w *ServerInterfaceWrapper) PostStoryElements(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostStoryElements(ctx)
+	return err
+}
+
+// DeleteStoryElementsNodeId converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteStoryElementsNodeId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "nodeId" -------------
+	var nodeId string
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "nodeId", runtime.ParamLocationPath, ctx.Param("nodeId"), &nodeId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter nodeId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteStoryElementsNodeId(ctx, nodeId)
 	return err
 }
 
@@ -112,8 +130,8 @@ func (w *ServerInterfaceWrapper) GetStoryElementsNodeId(ctx echo.Context) error 
 	return err
 }
 
-// PutStoryElementsNodeId converts echo context to params.
-func (w *ServerInterfaceWrapper) PutStoryElementsNodeId(ctx echo.Context) error {
+// PatchStoryElementsNodeId converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchStoryElementsNodeId(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "nodeId" -------------
 	var nodeId string
@@ -124,7 +142,7 @@ func (w *ServerInterfaceWrapper) PutStoryElementsNodeId(ctx echo.Context) error 
 	}
 
 	// Invoke the callback with all the unmarshaled arguments
-	err = w.Handler.PutStoryElementsNodeId(ctx, nodeId)
+	err = w.Handler.PatchStoryElementsNodeId(ctx, nodeId)
 	return err
 }
 
@@ -156,31 +174,37 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/player", wrapper.PostPlayer)
-	router.GET(baseURL+"/player/:playerId", wrapper.GetPlayerPlayerId)
-	router.PATCH(baseURL+"/player/:playerId", wrapper.PatchPlayerPlayerId)
+	router.POST(baseURL+"/players", wrapper.PostPlayers)
+	router.GET(baseURL+"/players/:playerId", wrapper.GetPlayersPlayerId)
+	router.PATCH(baseURL+"/players/:playerId", wrapper.PatchPlayersPlayerId)
 	router.POST(baseURL+"/storyElements", wrapper.PostStoryElements)
+	router.DELETE(baseURL+"/storyElements/:nodeId", wrapper.DeleteStoryElementsNodeId)
 	router.GET(baseURL+"/storyElements/:nodeId", wrapper.GetStoryElementsNodeId)
-	router.PUT(baseURL+"/storyElements/:nodeId", wrapper.PutStoryElementsNodeId)
+	router.PATCH(baseURL+"/storyElements/:nodeId", wrapper.PatchStoryElementsNodeId)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xWTW/bOBD9KwR3gb0YlrO96eYmRWGgaI0EORRFUDDSOGYgkezM0K5g+L8XpOT4Q1Ji",
-	"H2L3ZJmczzdvHriSmS2dNWCYZLqSlM2hVPFzWqgKMHw5tA6QNcTznzoPP1w5kKkkRm2e5HogoVS66Lwh",
-	"tljdseI6gGYo48e/CDOZyn+SbQ1JU0By9+ITIjQhFaKqwn9PgEaV0JluqX9PbsLNzGKpWKbSe53LwaHl",
-	"Nq59fIaMg29M+6mAEgwf37pC1jOV8X57reCHXWRz5bgLYoV8f/ulM1Vv1wudg+326mo0s4abHts5bA41",
-	"gq0r61hbc2KfTiFfpMlIvJ5OlppyW57USS9hap52ddhPi20lLVp4RDB8vWVHy6UxmTbAdm/c6Y331dRu",
-	"PBxpM7PBOQfKUEdiyFSOjRhPJ2JmUShxPbeWQHy3HsW3pRHjfAGGPYJ4UiUMw05qLkLgfsvxdCIHcgFI",
-	"dYKr4Wg4qrkIRjktU/khHgWi8Tz2k7iteFmKGIXBqFDjJJepnFriRuAGEuGXB+KPNq+C5c5qKOcKnUW3",
-	"5JlC+o1EvqVfTfAIVIivEXKZMnqIB+SsoZol/4+u3iXr/ljqG0GBqSJDUAy5IJ9lQDTzRVEN45jJl6XC",
-	"Kgwk2gglDCyF2/GuDRuEk1X9O8nXobYn6MD6MzRQTxvTOClUJTAgyfTHSupQYpie3Cy/dFvjffwGO1i8",
-	"pfAPLaxH58YagVHDAvJDgG+bC6EaeP+jF4AjlbN5B2/D8UXRvOyqnH183uVhVQ6Hdx+PW6MTj5WY3DQb",
-	"QjtvCXpdiu72TN8H5r2nzZl1qZ17H/J4L6A2OF2eaNe9C/1kFd80r4vU3hC+RvujdstsTPs365y6dBzW",
-	"oeijtIlezGtd8l0U9mcH72/Yj9GF9uMtTdqOLOiRZmo0KVgDLjbT8FjIVM6ZHaVJopweVtbjEh5JMwwz",
-	"W8r1w/pPAAAA//87BrGzIQ4AAA==",
+	"H4sIAAAAAAAC/8xX328iNxD+Vyy30r0gfrRRW/GWhqpCut6hpOhUnaLKrAfWp13bsWdJEOJ/r2zvApv1",
+	"sqBTQt+Md+bz+PtmxsOWJirXSoJES8dbapMUcuaXd6kSCbiVNkqDQQF+n4NNjNAolGz8pJPDL6KWBFMg",
+	"icfp0x7FjQY6phaNkCu661GRsxXMTdbE+ewXLCPz+48EFWGSeGOyVKYLVcILflIcppMmrtsngoNEsRRg",
+	"9nC2WFh4KkAisajMhkAGOUiMHvAsLFd5DH4fdjA5PsnAUyEM8O4b7Hq0Mqbjr7UTapd73HuqxTdI0IU2",
+	"y9gGTFO0fwVvRvt3CkR7hw+WFFI8FcfcRK8OORMRuWYViv9OGOcGrHUIS2VyhnRcekYgPd8PyDBEKhBy",
+	"v/jRwJKO6Q+DQ4YOyvQcPOx9HEIJyYxhm6DPS0ycebjhF/ESy4BARC3kohC8U55wWMVMTBMf7B8hn85U",
+	"Zv5ajEOidmYnMzi//xjBDJUUUo9pBEOYiUOU3z+xHCIlxHI41HYAwlTYKigiLNHMIFHLFnCX9+drXfah",
+	"iM6JklhyWg/xLnyoouzmTF7ULoQ9A9JbxDCnbaLWSFxApuTKElRR9LXgoM6V2Ruf6GReAsa5CM1rVsvP",
+	"U9J88e5H0lRJ/6pGKi72RB+0ay2YUN2NckkKY0CiN2lr8kcMV3kavIhW1l+SCHkg/jL5Okqzi+Y62F9M",
+	"ayFXLszyxZhObCmfMOTI2DfTs+qlIUpZL62aRCiNqVLifvc8EC4aL8POhnPCuf1VbpesFa7R5EvsMsYm",
+	"P85DyKVqnn4rye1s6o9k5C5VygL5RxWGfH6W5JavQWJhgKxYHoYBgZkDbre8nU1pj67B2HDAqD/sDx0D",
+	"SoNkWtAx/dlv9ahmmHqRBuF582utrO+ZTkTmgpxy94Qri7PSKFweLP6u+MZX3aHTMq0zkXi/wTcbNA+p",
+	"15WY5Wyyq5OLpgC/YbWSNqTUT8PRm5waG1pIYoAhcGKLJAFrl0WWbfo+A2yR58xsnBjehjAi4Xk/KTiT",
+	"itfBNiymfOcCWkGE4T+hInhW2nqFDMsBvTRft1S4wJxqVaaNqT4Y11nrHTHwOn0fG4wO343RD+55dHQZ",
+	"QCNg3cHtfWlF2GEYDf6LTdkHp5O+y2/NMEkjmeu235fZ6xbHFaQsNO8skrm36ZLRFY09mog7WtJDzfRt",
+	"uK8N6O/cnppn13V4OB40L+9Vr+bUJvuDrR/JQtvikEEYuupCTPx+TQo/KJxXZrIy/Z72ddN8WOvUhNhP",
+	"UxPuQVidFpegAi1xcVatpq2BX5WD4ZWy7uI+3knvqU7+3hT/H/rJtZS9rK2HP/Xd+np/MOtKrMJkdExT",
+	"RG3Hg8E2VRadZjs3xTIj2CILPFQfQqkvWZGhm2Vv+qNfh/3R8Lf+6OYXh/64+y8AAP//ibrreLcUAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

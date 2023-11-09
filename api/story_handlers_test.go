@@ -29,8 +29,8 @@ func TestCreateStoryElement_StoryElementCreated(t *testing.T) {
 
 		// Create request payload
 		storyElement := &models.PostStoryElementsJSONRequestBody{
-			StoryID: &storyID,
-			Content: &content,
+			StoryID: storyID,
+			Content: content,
 		}
 
 		storyElementJSON, err := json.Marshal(storyElement)
@@ -47,7 +47,7 @@ func TestCreateStoryElement_StoryElementCreated(t *testing.T) {
 		h := api.NewStoryHandler(mt.Coll)
 
 		// Add Mock Response
-		mt.AddMockResponses(bson.D{{"ok", 1}})
+		mt.AddMockResponses(bson.D{{Key: "ok", Value: 1}})
 
 		h.CreateStoryElement(c)
 
@@ -87,8 +87,8 @@ func TestCreateStoryElement_InsertFailed(t *testing.T) {
 
 		// Create request payload
 		storyElement := &models.PostStoryElementsJSONRequestBody{
-			StoryID: &storyID,
-			Content: &content,
+			StoryID: storyID,
+			Content: content,
 		}
 
 		storyElementJSON, err := json.Marshal(storyElement)
@@ -105,7 +105,7 @@ func TestCreateStoryElement_InsertFailed(t *testing.T) {
 		h := api.NewStoryHandler(mt.Coll)
 
 		// Add Mock Response for insertion failure
-		mt.AddMockResponses(bson.D{{"ok", 0}, {"errmsg", "insertion error"}})
+		mt.AddMockResponses(bson.D{{Key: "ok", Value: 0}, {Key: "errmsg", Value: "insertion error"}})
 
 		h.CreateStoryElement(c)
 
@@ -133,13 +133,13 @@ func TestGetStoryElement_StoryElementFound(t *testing.T) {
 
 		content := "Some content"
 		storyElement := &models.StoryElement{
-			NodeID:  &nodeId,
-			Content: &content,
+			NodeID:  nodeId,
+			Content: content,
 		}
 
 		mt.AddMockResponses(mtest.CreateCursorResponse(1, "foo.bar", mtest.FirstBatch, bson.D{
-			{"nodeID", storyElement.NodeID},
-			{"content", storyElement.Content},
+			{Key: "nodeID", Value: storyElement.NodeID},
+			{Key: "content", Value: storyElement.Content},
 		}))
 
 		h.GetStoryElement(c, nodeId)
@@ -189,7 +189,7 @@ func TestGetStoryElement_InternalServerError(t *testing.T) {
 
 		h := api.NewStoryHandler(mt.Coll)
 
-		mt.AddMockResponses(bson.D{{"ok", 0}, {"errmsg", "Internal Server Error"}})
+		mt.AddMockResponses(bson.D{{Key: "ok", Value: 0}, {Key: "errmsg", Value: "Internal Server Error"}})
 
 		h.GetStoryElement(c, nodeId)
 
@@ -233,7 +233,7 @@ func TestUpdateStoryElement_SuccessfulUpdate(t *testing.T) {
 	mt.Run("successful update", func(mt *mtest.T) {
 		nodeId := "SomeNodeID"
 		content := "New Content"
-		storyElement := models.PutStoryElementsNodeIdJSONRequestBody{Content: &content, NodeID: &nodeId}
+		storyElement := models.PatchStoryElementsNodeIdJSONRequestBody{Content: content, NodeID: nodeId}
 		reqBody, _ := json.Marshal(storyElement)
 		req := httptest.NewRequest(http.MethodPut, "/story/"+nodeId, bytes.NewBuffer(reqBody))
 		rec := httptest.NewRecorder()
@@ -260,7 +260,7 @@ func TestUpdateStoryElement_InternalServerError(t *testing.T) {
 	mt.Run("internal server error", func(mt *mtest.T) {
 		nodeId := "SomeNodeID"
 		updatedContent := "Updated content"
-		storyElement := models.PutStoryElementsNodeIdJSONRequestBody{Content: &updatedContent}
+		storyElement := models.PatchStoryElementsNodeIdJSONRequestBody{Content: updatedContent}
 
 		req := httptest.NewRequest(http.MethodPut, "/story/"+nodeId, nil)
 		rec := httptest.NewRecorder()
@@ -271,12 +271,89 @@ func TestUpdateStoryElement_InternalServerError(t *testing.T) {
 
 		h := api.NewStoryHandler(mt.Coll)
 
-		mt.AddMockResponses(bson.D{{"ok", 0}, {"errmsg", "Internal Server Error"}})
+		mt.AddMockResponses(bson.D{{Key: "ok", Value: 0}, {Key: "errmsg", Value: "Internal Server Error"}})
 
 		h.UpdateStoryElement(c, nodeId, storyElement)
 
 		// Validate
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Contains(t, rec.Body.String(), "Update failed due to an internal error")
+	})
+}
+
+// DeleteStoryElement
+
+func TestDeleteStoryElement_Deleted(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("story element deleted successfully", func(mt *mtest.T) {
+		nodeId := "SomeNodeID"
+		req := httptest.NewRequest(http.MethodDelete, "/story/"+nodeId, nil)
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+		c.SetPath("/story/:nodeId")
+		c.Set("nodeId", nodeId)
+
+		h := api.NewStoryHandler(mt.Coll)
+
+		mt.AddMockResponses(mtest.CreateSuccessResponse())
+
+		err := h.DeleteStoryElement(c, nodeId)
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Story element deleted successfully")
+	})
+}
+
+func TestDeleteStoryElement_NotFound(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("story element not found", func(mt *mtest.T) {
+		nodeId := "NonExistentNodeID"
+		req := httptest.NewRequest(http.MethodDelete, "/story/"+nodeId, nil)
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+		c.SetPath("/story/:nodeId")
+		c.SetParamNames("nodeId")
+		c.SetParamValues(nodeId)
+
+		h := api.NewStoryHandler(mt.Coll)
+
+		mt.AddMockResponses(bson.D{{Key: "n", Value: 0}, {Key: "ok", Value: 1}})
+
+		err := h.DeleteStoryElement(c, nodeId)
+		// Since the MongoDB driver does not return an error for delete operations
+		// when no document is found, we don't expect an error here.
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusOK, rec.Code)
+		// Optionally, check for some indication of a no-op
+	})
+}
+
+func TestDeleteStoryElement_InternalServerError(t *testing.T) {
+	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
+	defer mt.Close()
+
+	mt.Run("internal server error", func(mt *mtest.T) {
+		nodeId := "SomeNodeID"
+		req := httptest.NewRequest(http.MethodDelete, "/story/"+nodeId, nil)
+		rec := httptest.NewRecorder()
+		e := echo.New()
+		c := e.NewContext(req, rec)
+		c.SetPath("/story/:nodeId")
+		c.SetParamNames("nodeId")
+		c.SetParamValues(nodeId)
+
+		h := api.NewStoryHandler(mt.Coll)
+
+		mt.AddMockResponses(bson.D{{Key: "ok", Value: 0}, {Key: "errmsg", Value: "Internal Server Error"}})
+
+		h.DeleteStoryElement(c, nodeId)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Delete failed due to an internal error")
 	})
 }

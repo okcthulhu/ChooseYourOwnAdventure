@@ -1,5 +1,5 @@
 package: api
-output: cyoa-server.gen.go
+output: api/cyoa-server.gen.go
 # additional-imports:
 #   - package: github.com/okcthulhu/ChooseYourOwnAdventure/api/models
 #     alias: .

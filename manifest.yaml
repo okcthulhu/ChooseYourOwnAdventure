@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cyoa-api-service
+spec:
+  type: LoadBalancer  # Adding this line
+  selector:
+    app: cyoa-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: cyoa-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cyoa-api
+  template:
+    metadata:
+      labels:
+        app: cyoa-api
+    spec:
+      containers:
+      - name: cyoa-api
+        image: gcr.io/choose-your-own-dbt-adventure/cyoa-api:latest
